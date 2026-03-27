@@ -168,9 +168,6 @@
   .opgave-details-toggle.open .opgave-details-arrow { transform:rotate(180deg); }
   .opgave-antwoord-preview { font-size:13px; color:var(--ink-mid); line-height:1.6; }
   .opgave-antwoord-preview strong { color:var(--teal); }
-  .bewaar-btn { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--ink-soft); transition:all 0.15s; font-family:inherit; margin-top:10px; }
-  .bewaar-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-light); }
-  .bewaar-btn.bewaard { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
   .tag { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; background:var(--warm-dark); color:var(--ink-mid); }
   .tag.teal { background:var(--teal-light); color:var(--teal); }
 
@@ -281,18 +278,7 @@
   .export-btn:hover { border-color:var(--teal-mid); color:var(--teal); background:var(--teal-light); }
   .export-btn.word-btn { border-color:var(--teal-mid); background:var(--teal-light); color:var(--teal); }
   .export-btn.word-btn:hover { background:var(--teal); color:white; }
-  .export-btn.nt2-export-btn { border-color:rgba(127,119,221,0.5); background:var(--purple-light); color:var(--purple); font-family:inherit; font-size:13px; }
-  .export-btn.nt2-export-btn:hover { background:var(--purple); color:white; border-color:var(--purple); }
-  .export-btn.nt2-export-btn:disabled { opacity:0.5; cursor:not-allowed; }
   .soon-tag { font-size:10px; background:var(--warm-dark); padding:1px 6px; border-radius:4px; color:var(--ink-soft); }
-  .mandje-balk { display:none; align-items:center; justify-content:space-between; gap:12px; padding:12px 18px; background:var(--accent-light); border:1.5px solid rgba(232,84,30,0.3); border-radius:9px; margin-top:16px; flex-wrap:wrap; }
-  .mandje-balk.visible { display:flex; }
-  .mandje-balk-tekst { font-size:13px; color:var(--accent); font-weight:600; }
-  .mandje-balk-tekst span { font-weight:400; color:var(--ink-mid); margin-left:6px; font-size:12px; }
-  .mandje-export-btn { display:inline-flex; align-items:center; gap:7px; padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; border:none; background:var(--accent); color:white; transition:all 0.15s; font-family:inherit; }
-  .mandje-export-btn:hover { background:#C8411A; transform:translateY(-1px); }
-  .mandje-leeg-btn { font-size:12px; color:var(--ink-soft); cursor:pointer; background:none; border:none; font-family:inherit; padding:4px 8px; border-radius:5px; }
-  .mandje-leeg-btn:hover { color:var(--red); background:var(--red-light); }
 
   /* RESPONSIVE */
   @media(max-width:620px){
@@ -447,7 +433,7 @@
     <div id="loading-3" class="loading-box">
       <div class="spinner"></div>
       <div class="loading-label" id="loading-text">Opgaven worden gegenereerd…</div>
-      <div class="loading-hint">Dit duurt meestal 5–10 seconden.</div>
+      <div class="loading-hint">Dit duurt meestal 10–20 seconden.</div>
     </div>
 
     <div class="error-box" id="error-3">
@@ -458,17 +444,6 @@
     <div id="opgaven-list" style="display:none;">
       <div id="context-chip-3" class="context-chip"></div>
       <div class="opgave-list" id="opgaven-container"></div>
-      <!-- BEWAAR-MANDJE -->
-      <div class="mandje-balk" id="mandje-balk">
-        <div>
-          <div class="mandje-balk-tekst">📦 Bewaard mandje <span id="mandje-teller">0 opgaven bewaard</span></div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button class="mandje-leeg-btn" onclick="leegMandje()">Mandje leegmaken</button>
-          <button class="mandje-export-btn" onclick="exporteerMandje()">📄 Exporteer alle bewaarde opgaven</button>
-        </div>
-      </div>
-
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="showStep(2)">← Terug</button>
         <button class="btn btn-primary" onclick="goStep4()">Bekijk differentiatie →</button>
@@ -566,6 +541,9 @@
           <h3>NT2-aanpassing</h3>
           <p>Een taalvereenvoudigde versie van de opgave voor studenten die Nederlands als tweede taal leren.</p>
         </div>
+        <button class="btn btn-purple" id="btn-nt2" onclick="genereerNt2()" style="flex-shrink:0;">
+          🌐 Genereer NT2-versie
+        </button>
       </div>
       <div class="nt2-loading" id="nt2-loading">
         <div class="nt2-spinner"></div>
@@ -598,16 +576,12 @@
       </div>
       <div class="export-grid">
         <div class="export-btn word-btn" onclick="exporteerWord()">📄 Word-document downloaden</div>
-        <button class="export-btn nt2-export-btn" id="btn-nt2" onclick="genereerNt2()">🌐 NT2-versie genereren</button>
-        <div class="export-btn" onclick="kopieerTekst()">📋 Tekst kopiëren</div>
-        <div class="export-btn" onclick="window.print()">🖨 Afdrukken</div>
-        <div class="export-btn" style="opacity:0.4;cursor:default;">👥 Teamslide <span class="soon-tag">binnenkort</span></div>
       </div>
     </div>
 
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="showStep(3)">← Terug naar opgaven</button>
-      <button class="btn btn-accent" onclick="startOpnieuw()">＋ Nieuwe opgave maken</button>
+      <button class="btn btn-accent" onclick="bevestigOpnieuw()">＋ Nieuwe opgave maken</button>
     </div>
   </div>
 
@@ -814,8 +788,6 @@ let maxStep = 1;
 let gegenereerdeOpgaven = [];
 let gekozenOpgaveIndex = 0;
 let geselecteerdeNiveaus = new Set([1, 2, 3, 4]);
-// Bewaar-mandje: array van { opgave, opleiding, niveauLabel, domein }
-let bewaardMandje = [];
 
 const niveauLabelMap = { 'entree': 'Entree', 'niveau 2': 'Niveau 2', 'niveau 3': 'Niveau 3', 'niveau 4': 'Niveau 4' };
 
@@ -962,8 +934,7 @@ function renderOpgaven(opgaven, opleiding, niveauLabel) {
     const card = document.createElement('div');
     card.className = 'opgave-card' + (i === 0 ? ' selected' : '');
     card.onclick = (e) => {
-      // Klik op bewaar-knop of toggle mag kaart niet selecteren
-      if (e.target.closest('.bewaar-btn') || e.target.closest('.opgave-details-toggle')) return;
+      if (e.target.closest('.opgave-details-toggle')) return;
       selectOpgave(card, i);
     };
 
@@ -985,9 +956,6 @@ function renderOpgaven(opgaven, opleiding, niveauLabel) {
         <button class="opgave-details-toggle" onclick="toggleOpgaveDetails(this, ${i})" aria-expanded="false">
           <span>Bekijk uitwerking</span> <span class="opgave-details-arrow">▼</span>
         </button>
-        <button class="bewaar-btn" id="bewaar-btn-${i}" onclick="bewaarOpgave(${i})">
-          ＋ Bewaren
-        </button>
       </div>
       <div class="opgave-details" id="opgave-details-${i}">
         ${opgave.antwoord ? `<div class="opgave-antwoord-preview" style="margin-bottom:8px;">Antwoord: <strong>${opgave.antwoord}</strong></div>` : ''}
@@ -997,8 +965,6 @@ function renderOpgaven(opgaven, opleiding, niveauLabel) {
     container.appendChild(card);
   });
 
-  // Toon bewaar-mandje knop bijwerken
-  updateBewaarMandjeKnop();
 }
 
 function selectOpgave(el, index) {
@@ -1260,151 +1226,6 @@ function toggleOpgaveDetails(btn, index) {
   btn.setAttribute('aria-expanded', !isOpen);
 }
 
-// ─── BEWAAR-MANDJE (punt 6) ─────────────────────────────────────────────────
-function bewaarOpgave(index) {
-  const opgave = gegenereerdeOpgaven[index];
-  if (!opgave) return;
-  const opleiding = document.getElementById('opleiding').value.trim();
-  const niveau = document.getElementById('niveau').value;
-  const nl = niveauLabelMap[niveau] || niveau;
-
-  const btn = document.getElementById('bewaar-btn-' + index);
-  const alBewaard = bewaardMandje.some(item => item.opgave === opgave);
-
-  if (alBewaard) {
-    // Verwijder uit mandje
-    bewaardMandje = bewaardMandje.filter(item => item.opgave !== opgave);
-    btn.innerHTML = '＋ Bewaren';
-    btn.classList.remove('bewaard');
-  } else {
-    // Voeg toe aan mandje
-    bewaardMandje.push({ opgave, opleiding, niveauLabel: nl, domein: selectedDomain });
-    btn.innerHTML = '✓ Bewaard';
-    btn.classList.add('bewaard');
-  }
-  updateBewaarMandjeKnop();
-}
-
-function updateBewaarMandjeKnop() {
-  const balk = document.getElementById('mandje-balk');
-  const teller = document.getElementById('mandje-teller');
-  if (bewaardMandje.length === 0) {
-    balk.classList.remove('visible');
-  } else {
-    balk.classList.add('visible');
-    teller.textContent = bewaardMandje.length + (bewaardMandje.length === 1 ? ' opgave bewaard' : ' opgaven bewaard');
-  }
-}
-
-function leegMandje() {
-  bewaardMandje = [];
-  // Reset alle bewaar-knoppen
-  document.querySelectorAll('.bewaar-btn').forEach(btn => {
-    btn.innerHTML = '＋ Bewaren';
-    btn.classList.remove('bewaard');
-  });
-  updateBewaarMandjeKnop();
-}
-
-function exporteerMandje() {
-  if (bewaardMandje.length === 0) return;
-
-  const niveauTitels = {
-    1: 'Niveau 1 — Doen in de praktijk',
-    2: 'Niveau 2 — Werken met een afbeelding',
-    3: 'Niveau 3 — Werken met een schema',
-    4: 'Niveau 4 — Zelfstandig berekenen'
-  };
-
-  let htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<style>
-  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; margin: 2cm; color: #1A1A2E; }
-  h1 { font-size: 16pt; color: #0D7B6B; margin-bottom: 4pt; }
-  h2 { font-size: 13pt; color: #0D7B6B; margin-top: 18pt; margin-bottom: 6pt; border-bottom: 1pt solid #5BBFB0; padding-bottom: 3pt; }
-  h3 { font-size: 11pt; color: #3D3D5C; margin-top: 14pt; margin-bottom: 4pt; }
-  .meta { font-size: 9pt; color: #7A7A9A; margin-bottom: 16pt; }
-  .opgave-scheiding { border-top: 2pt solid #0D7B6B; margin: 24pt 0 16pt; padding-top: 10pt; }
-  .context-box { background: #F5F0E8; padding: 10pt; border-radius: 4pt; margin-bottom: 8pt; }
-  .vraag { font-weight: bold; font-size: 12pt; margin: 8pt 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin: 8pt 0; }
-  th { background: #EDE5D4; padding: 6pt 8pt; text-align: left; border: 0.5pt solid #ccc; }
-  td { padding: 6pt 8pt; border: 0.5pt solid #ccc; }
-  .note { background: #FDF0EB; border-left: 3pt solid #E8541E; padding: 8pt 10pt; font-size: 9pt; margin-top: 8pt; }
-  .niveau-label { display: inline-block; background: #E6F5F2; color: #0D7B6B; padding: 2pt 8pt; border-radius: 10pt; font-size: 9pt; font-weight: bold; margin-bottom: 8pt; }
-  @page { margin: 2cm; }
-</style>
-</head><body>
-<h1>RekenContext — Opgavenbundel</h1>
-<div class="meta">Gegenereerd op ${new Date().toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'})} &nbsp;|&nbsp; ${bewaardMandje.length} opgaven</div>`;
-
-  bewaardMandje.forEach((item, idx) => {
-    const opgave = item.opgave;
-    const stappen = opgave.stappen || [];
-    const uitwerking = opgave.uitwerking || [];
-
-    htmlContent += `<div class="opgave-scheiding">
-<h2>Opgave ${idx + 1}: ${opgave.titel || 'Opgave ' + (idx + 1)}</h2>
-<div class="meta">${item.opleiding} &nbsp;|&nbsp; ${item.niveauLabel} &nbsp;|&nbsp; ${item.domein}</div>`;
-
-    // Alle 4 niveaus per opgave
-    htmlContent += `
-<h3>${niveauTitels[1]}</h3>
-<div class="niveau-label">Informeel handelen</div>
-<div class="context-box"><strong>Docentinstructie:</strong> Zet materialen klaar die passen bij deze situatie. Laat de student de opgave uitvoeren alsof het een echte werksituatie is.</div>
-<div class="context-box"><strong>Situatie:</strong> ${opgave.contextbeschrijving || ''}</div>
-
-<h3>${niveauTitels[2]}</h3>
-<div class="niveau-label">Voorstellen concreet</div>
-<div class="context-box">${opgave.contextbeschrijving || ''}</div>
-<p><em>[Voeg hier een afbeelding toe.]</em></p>
-<div class="vraag">${opgave.vraag || ''}</div>
-
-<h3>${niveauTitels[3]}</h3>
-<div class="niveau-label">Voorstellen abstract</div>
-<div class="context-box">${opgave.contextbeschrijving || ''}</div>
-<table>
-  <thead><tr><th>Rekenstap</th><th>+/−/×/÷</th><th>Berekening</th><th>Uitkomst</th></tr></thead>
-  <tbody>
-    ${stappen.length > 0
-      ? stappen.map((s,i) => `<tr><td><strong>Stap ${i+1}:</strong> ${s.label||''}</td><td style="text-align:center;font-weight:bold">${s.operator||''}</td><td style="font-style:italic">${s.invoer_omschrijving||''}</td><td>………… ${s.eenheid||''}</td></tr>`).join('')
-      : '<tr><td>Stap 1</td><td>×</td><td>___ × ___</td><td>…</td></tr><tr><td>Stap 2</td><td>÷</td><td>___ ÷ ___</td><td>…</td></tr>'
-    }
-    <tr style="background:#E6F5F2"><td colspan="3" style="font-weight:bold;color:#0D7B6B">Antwoord</td><td style="font-weight:bold">……………</td></tr>
-  </tbody>
-</table>
-<div class="vraag">${opgave.vraag || ''}</div>
-
-<h3>${niveauTitels[4]}</h3>
-<div class="niveau-label">Formeel handelen</div>
-<div class="context-box">${opgave.contextbeschrijving || ''}</div>
-<div class="vraag">${opgave.vraag || ''} Laat je berekening zien.</div>`;
-
-    // Uitwerking voor docent
-    if (opgave.antwoord || uitwerking.length > 0) {
-      htmlContent += `<div style="margin-top:12pt;border:1pt solid #5BBFB0;border-radius:4pt;overflow:hidden;">
-<div style="padding:6pt 10pt;background:#E6F5F2;font-weight:bold;color:#0D7B6B;font-size:10pt;">🔑 Antwoord &amp; uitwerking (voor docent)</div>
-<div style="padding:10pt;">
-  ${opgave.antwoord ? `<p style="margin-bottom:8pt;font-size:12pt;">Antwoord: <strong style="color:#0D7B6B">${opgave.antwoord}</strong></p>` : ''}
-  ${uitwerking.length > 0 ? `<table><thead><tr><th>Stap</th><th>Uitwerking</th></tr></thead><tbody>${uitwerking.map((s,i) => `<tr><td style="font-weight:bold;color:#0D7B6B;white-space:nowrap">Stap ${i+1}</td><td>${s}</td></tr>`).join('')}</tbody></table>` : ''}
-</div></div>`;
-    }
-
-    htmlContent += `</div>`;
-  });
-
-  htmlContent += `</body></html>`;
-
-  const blob = new Blob(['﻿' + htmlContent], { type: 'application/msword;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'RekenContext_Bundel_' + bewaardMandje.length + '_opgaven.doc';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 // ═══════════════════════════════════════════
 // DIFF TABS
 // ═══════════════════════════════════════════
@@ -1628,30 +1449,17 @@ ${opgave.antwoord ? `<p style="font-size:9pt;color:#7A7A9A"><strong>Verwacht ant
 }
 
 // ═══════════════════════════════════════════
-// TEKST KOPIËREN
-// ═══════════════════════════════════════════
-function kopieerTekst() {
-  const actief = document.querySelector('.diff-content.active');
-  if (!actief) return;
-  const tekst = actief.innerText.replace(/\n{3,}/g, '\n\n');
-  navigator.clipboard.writeText(tekst).then(() => {
-    const knop = document.querySelector('.export-btn:not([onclick="exporteerWord()"])');
-    if (!knop) return;
-    const orig = knop.innerHTML;
-    knop.innerHTML = '✓ Gekopieerd!';
-    knop.style.color = 'var(--teal)';
-    setTimeout(() => { knop.innerHTML = orig; knop.style.color = ''; }, 2000);
-  });
-}
-
-// ═══════════════════════════════════════════
 // OPNIEUW
 // ═══════════════════════════════════════════
+function bevestigOpnieuw() {
+  const ok = confirm('Weet je het zeker? Je gaat terug naar het begin en kunt niet meer terugkeren naar de huidige opgave en differentiatie.');
+  if (ok) startOpnieuw();
+}
+
 function startOpnieuw() {
   selectedDomain = ''; maxStep = 1;
   gegenereerdeOpgaven = []; gekozenOpgaveIndex = 0;
   geselecteerdeNiveaus = new Set([1, 2, 3, 4]);
-  bewaardMandje = [];
   huidigCrebo = null;
   document.getElementById('opleiding').value = '';
   document.getElementById('niveau').value = '';
