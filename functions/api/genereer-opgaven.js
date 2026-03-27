@@ -293,7 +293,9 @@ Het veld uitwerking bevat de volledig uitgeschreven berekening per stap, voor de
 Schrijf elke stap als één zin: "Stap N: [wat] × [getal] = [uitkomst] [eenheid]".
 Dit is de modeloplossing die de docent kan gebruiken bij nakijken of uitleggen.`;
 
-  const domeinInfo = DOMEIN_CONTEXT[domein] || domein;
+  // Stuur alleen de tekst van het gekozen domein mee — niet alle vijf.
+  // Dit scheelt ~40% aan input-tokens en versnelt de respons merkbaar.
+  const domeinInfo = DOMEIN_CONTEXT[domein] || `Domein: ${domein}`;
   const niveauInfo = NIVEAU_COMPLEXITEIT[niveau.toLowerCase()] || niveau;
   const creboInfo = crebo ? ` (crebo ${crebo})` : '';
 
