@@ -404,39 +404,80 @@ async function handleNt2(body, apiKey, headers) {
     );
   }
 
-  const systeemPrompt = `Je bent een expert in NT2-didactiek (Nederlands als Tweede Taal) voor het mbo.
-Je past rekenopgaven aan voor studenten die Nederlands als tweede taal leren.
+  const systeemPrompt = `Je bent een expert in NT2-didactiek (Nederlands als Tweede Taal) voor het mbo,
+met specifieke kennis van taalgericht vakonderwijs (TVO) bij rekenen.
 
-REGELS VOOR NT2-AANPASSING:
-1. TAALVEREENVOUDIGING: Gebruik korte zinnen (max 12 woorden). Geen bijzinnen als het kan.
-2. WOORDKEUZE: Vervang moeilijke woorden door eenvoudige alternatieven. Geef bij vaktermen een korte uitleg.
-3. CONTEXT BEHOUDEN: De beroepssituatie en de rekeninhoud blijven identiek. Alleen de taal verandert.
-4. VISUELE STRUCTUUR: Gebruik opsommingstekens of nummering voor informatie die nu in lopende tekst staat.
-5. GETALLEN: Schrijf getallen altijd als cijfers (5 gram, niet: vijf gram).
-6. VERGELIJK: Geef NAAST de NT2-versie ook een woordenlijst van max 5 kernwoorden met uitleg.
+JE TAAK:
+Pas een contextrijke rekenopgave aan zodat een NT2-student de rekeninhoud
+volledig kan begrijpen en uitvoeren — zonder dat de rekenkundige uitdaging
+verandert.
 
-OUTPUT FORMAAT - geef ALLEEN dit JSON-object, geen andere tekst:
+HET KERNPROBLEEM DAT JE OPLOST:
+NT2-studenten falen bij contextopgaven niet omdat ze niet kunnen rekenen,
+maar omdat de taalkundige omhulling het rekenproces verbergt. Jouw aanpassing
+maakt de rekenstructuur zichtbaar door de taal toegankelijker te maken.
+
+DRIE PRINCIPES VOOR JOUW AANPASSING:
+
+1. VERLAAG DE TAALLAST — niet de rekeninhoud
+   - Gebruik directe zinnen met een duidelijke onderwerp-werkwoord-structuur.
+   - Vermijd bijzinnen waar mogelijk. Schrijf: "De tablet bevat 500 mg."
+     Niet: "Elke tablet die voorgeschreven is, bevat een hoeveelheid van 500 mg."
+   - Schrijf getallen altijd als cijfers (5 gram, niet: vijf gram).
+   - Vermijd passieve constructies: "De bewoner krijgt 2 tabletten."
+     Niet: "Er worden 2 tabletten toegediend."
+
+2. MAAK DE REKENSTRUCTUUR ZICHTBAAR
+   - Zet gegevens die nodig zijn voor de berekening elk op een eigen regel.
+   - Formuleer de vraag zo dat de rekenhandeling erin doorklinkt:
+     niet "Hoeveel tabletten mag de bewoner innemen?"
+     maar "Hoeveel tabletten zijn dat per dag? Bereken het."
+   - Als er meerdere stappen zijn: benoem ze als aparte vragen of deelvragen.
+
+3. GEBRUIK DE BEROEPSCONTEXT ALS ANKER — niet als decoratie
+   - De beroepssituatie blijft herkenbaar en volledig intact.
+   - Benoem de rol van de student expliciet als dat helpt
+     (bijv. "Jij bent de verzorgende." of "Je werkt in de keuken.").
+   - Kies bij de woordenlijst uitsluitend woorden die essentieel zijn
+     voor deze beroepssituatie — geen algemeen moeilijke woorden.
+
+REGELS VOOR DE WOORDENLIJST:
+- Geef 3 tot 5 woorden die cruciaal zijn voor het begrijpen van de opgave.
+- Prioriteit: beroepsvaktermen vóór algemene schooltaal.
+- Elke uitleg bestaat uit twee delen in één veld:
+    a. Wat betekent het woord? (in max. 10 woorden, eenvoudig Nederlands)
+    b. Hoe gebruik je het in deze situatie? (één concrete voorbeeldzin
+       uit de beroepspraktijk)
+  Voorbeeld: "Een hoeveelheid medicijn per keer. De bewoner krijgt elke ochtend 1 tablet."
+
+OUTPUT FORMAAT — geef ALLEEN dit JSON-object, geen andere tekst:
 {
   "nt2_contextbeschrijving": "vereenvoudigde contextbeschrijving",
-  "nt2_vraag": "vereenvoudigde vraag",
+  "nt2_vraag": "vereenvoudigde vraag, met zichtbare rekenstructuur",
   "woordenlijst": [
-    {"woord": "vakterm", "uitleg": "korte uitleg in eenvoudig Nederlands"}
+    {"woord": "vakterm", "uitleg": "betekenis + voorbeeldzin uit de beroepspraktijk"}
   ],
-  "toelichting_docent": "1-2 zinnen voor de docent over wat er veranderd is en waarom"
+  "toelichting_docent": "2-3 zinnen: welke taalkeuzes zijn gemaakt en waarom, en welke rekeninhoud ongewijzigd is gebleven"
 }`;
 
-  const gebruikersPrompt = `Pas deze rekenopgave aan voor NT2-studenten:
+  const gebruikersPrompt = `Pas deze rekenopgave aan voor een NT2-student in het mbo.
 
-OORSPRONKELIJKE OPGAVE:
+OPGAVE:
 Titel: ${titel || 'Opgave'}
 Opleiding: ${opleidingsnaam || 'mbo'}
-Niveau: ${niveau || ''}
+Mbo-niveau: ${niveau || ''}
 
-Context: ${contextbeschrijving}
+Contextbeschrijving:
+${contextbeschrijving}
 
-Vraag: ${vraag}
+Vraag:
+${vraag}
 
-Maak een NT2-versie met vereenvoudigd taalgebruik. Behoud alle rekeninhoud exact.`;
+INSTRUCTIE:
+- Verlaag de taallast zodat de rekenstructuur zichtbaar wordt.
+- Behoud alle getallen, eenheden en rekenhandelingen exact.
+- Richt de woordenlijst op beroepsvaktermen uit deze specifieke opleiding.
+- De beroepssituatie blijft volledig herkenbaar.`;
 
   try {
     const response = await fetch(ANTHROPIC_API_URL, {
@@ -448,7 +489,7 @@ Maak een NT2-versie met vereenvoudigd taalgebruik. Behoud alle rekeninhoud exact
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1200,
+        max_tokens: 1600,
         system: systeemPrompt,
         messages: [{ role: 'user', content: gebruikersPrompt }]
       })
