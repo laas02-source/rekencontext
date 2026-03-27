@@ -160,6 +160,17 @@
   .opgave-card .opgave-context { font-size:14px; color:var(--ink-mid); line-height:1.6; margin-bottom:8px; }
   .opgave-card .opgave-vraag { font-size:14px; color:var(--ink); font-weight:500; line-height:1.5; }
   .opgave-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .opgave-details { display:none; margin-top:14px; border-top:1px solid var(--border); padding-top:12px; }
+  .opgave-details.open { display:block; animation:fadeUp 0.2s ease; }
+  .opgave-details-toggle { display:inline-flex; align-items:center; gap:6px; margin-top:10px; font-size:12px; font-weight:600; color:var(--teal); cursor:pointer; padding:5px 0; border:none; background:none; font-family:inherit; }
+  .opgave-details-toggle:hover { color:#0A6358; }
+  .opgave-details-arrow { font-size:10px; transition:transform 0.2s; display:inline-block; }
+  .opgave-details-toggle.open .opgave-details-arrow { transform:rotate(180deg); }
+  .opgave-antwoord-preview { font-size:13px; color:var(--ink-mid); line-height:1.6; }
+  .opgave-antwoord-preview strong { color:var(--teal); }
+  .bewaar-btn { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--ink-soft); transition:all 0.15s; font-family:inherit; margin-top:10px; }
+  .bewaar-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-light); }
+  .bewaar-btn.bewaard { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
   .tag { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; background:var(--warm-dark); color:var(--ink-mid); }
   .tag.teal { background:var(--teal-light); color:var(--teal); }
 
@@ -270,7 +281,18 @@
   .export-btn:hover { border-color:var(--teal-mid); color:var(--teal); background:var(--teal-light); }
   .export-btn.word-btn { border-color:var(--teal-mid); background:var(--teal-light); color:var(--teal); }
   .export-btn.word-btn:hover { background:var(--teal); color:white; }
+  .export-btn.nt2-export-btn { border-color:rgba(127,119,221,0.5); background:var(--purple-light); color:var(--purple); font-family:inherit; font-size:13px; }
+  .export-btn.nt2-export-btn:hover { background:var(--purple); color:white; border-color:var(--purple); }
+  .export-btn.nt2-export-btn:disabled { opacity:0.5; cursor:not-allowed; }
   .soon-tag { font-size:10px; background:var(--warm-dark); padding:1px 6px; border-radius:4px; color:var(--ink-soft); }
+  .mandje-balk { display:none; align-items:center; justify-content:space-between; gap:12px; padding:12px 18px; background:var(--accent-light); border:1.5px solid rgba(232,84,30,0.3); border-radius:9px; margin-top:16px; flex-wrap:wrap; }
+  .mandje-balk.visible { display:flex; }
+  .mandje-balk-tekst { font-size:13px; color:var(--accent); font-weight:600; }
+  .mandje-balk-tekst span { font-weight:400; color:var(--ink-mid); margin-left:6px; font-size:12px; }
+  .mandje-export-btn { display:inline-flex; align-items:center; gap:7px; padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; border:none; background:var(--accent); color:white; transition:all 0.15s; font-family:inherit; }
+  .mandje-export-btn:hover { background:#C8411A; transform:translateY(-1px); }
+  .mandje-leeg-btn { font-size:12px; color:var(--ink-soft); cursor:pointer; background:none; border:none; font-family:inherit; padding:4px 8px; border-radius:5px; }
+  .mandje-leeg-btn:hover { color:var(--red); background:var(--red-light); }
 
   /* RESPONSIVE */
   @media(max-width:620px){
@@ -436,6 +458,17 @@
     <div id="opgaven-list" style="display:none;">
       <div id="context-chip-3" class="context-chip"></div>
       <div class="opgave-list" id="opgaven-container"></div>
+      <!-- BEWAAR-MANDJE -->
+      <div class="mandje-balk" id="mandje-balk">
+        <div>
+          <div class="mandje-balk-tekst">📦 Bewaard mandje <span id="mandje-teller">0 opgaven bewaard</span></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="mandje-leeg-btn" onclick="leegMandje()">Mandje leegmaken</button>
+          <button class="mandje-export-btn" onclick="exporteerMandje()">📄 Exporteer alle bewaarde opgaven</button>
+        </div>
+      </div>
+
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="showStep(2)">← Terug</button>
         <button class="btn btn-primary" onclick="goStep4()">Bekijk differentiatie →</button>
@@ -533,9 +566,6 @@
           <h3>NT2-aanpassing</h3>
           <p>Een taalvereenvoudigde versie van de opgave voor studenten die Nederlands als tweede taal leren.</p>
         </div>
-        <button class="btn btn-purple" id="btn-nt2" onclick="genereerNt2()" style="flex-shrink:0;">
-          🌐 Genereer NT2-versie
-        </button>
       </div>
       <div class="nt2-loading" id="nt2-loading">
         <div class="nt2-spinner"></div>
@@ -568,6 +598,7 @@
       </div>
       <div class="export-grid">
         <div class="export-btn word-btn" onclick="exporteerWord()">📄 Word-document downloaden</div>
+        <button class="export-btn nt2-export-btn" id="btn-nt2" onclick="genereerNt2()">🌐 NT2-versie genereren</button>
         <div class="export-btn" onclick="kopieerTekst()">📋 Tekst kopiëren</div>
         <div class="export-btn" onclick="window.print()">🖨 Afdrukken</div>
         <div class="export-btn" style="opacity:0.4;cursor:default;">👥 Teamslide <span class="soon-tag">binnenkort</span></div>
@@ -639,9 +670,16 @@ function zoekOpleiding(val) {
       .slice(0, 8);
 
     if (resultaten.length === 0) {
-      dropdown.innerHTML = '<div class="naam-zoek-geen">Geen opleiding gevonden — naam wordt handmatig doorgegeven aan de AI.</div>';
+      dropdown.innerHTML = `<div class="naam-zoek-geen" style="padding:14px;">
+        <div style="margin-bottom:8px;">⚠ Geen opleiding gevonden in de database.</div>
+        <div style="font-size:12px;color:var(--ink-mid);margin-bottom:10px;">Je kunt de naam <strong>"${val.trim()}"</strong> toch gebruiken — de tool genereert dan opgaven zonder kerntaken.</div>
+        <button onclick="kiesHandmatig('${val.trim().replace(/'/g, "\'")}'); event.stopPropagation();"
+          style="padding:7px 14px;background:var(--teal-light);color:var(--teal);border:1.5px solid var(--teal-mid);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+          Gebruik "${val.trim().length > 30 ? val.trim().substring(0,30) + '…' : val.trim()}" →
+        </button>
+      </div>`;
       dropdown.classList.add('open');
-      hint.textContent = 'Tip: typ minimaal 2 letters van de opleidingsnaam.';
+      hint.textContent = 'Tip: probeer een andere zoekterm, of gebruik de naam handmatig.';
     } else {
       dropdown.innerHTML = resultaten.map((c, i) =>
         `<div class="naam-zoek-item" data-crebo="${c.crebo}" data-naam="${c.naam}" data-niveau="${c.niveau}" data-sector="${c.sector}"
@@ -705,6 +743,18 @@ function sluitDropdown() {
   zoekActiefIndex = -1;
 }
 
+function kiesHandmatig(naam) {
+  document.getElementById('opleiding').value = naam;
+  document.getElementById('crebo').value = '';
+  document.getElementById('crebo-confirmed').classList.remove('visible');
+  document.getElementById('crebo-unknown').style.display = 'flex';
+  document.getElementById('err-opleiding').classList.remove('visible');
+  document.getElementById('opleiding').classList.remove('error');
+  sluitDropdown();
+  huidigCrebo = null;
+  updateGenereerKnop();
+}
+
 function toonKerntakenBevestiging(crebo) {
   const el = document.getElementById('kerntaken-bevestiging');
   if (!crebo || !kerntakenData || !kerntakenData[crebo]) {
@@ -764,6 +814,8 @@ let maxStep = 1;
 let gegenereerdeOpgaven = [];
 let gekozenOpgaveIndex = 0;
 let geselecteerdeNiveaus = new Set([1, 2, 3, 4]);
+// Bewaar-mandje: array van { opgave, opleiding, niveauLabel, domein }
+let bewaardMandje = [];
 
 const niveauLabelMap = { 'entree': 'Entree', 'niveau 2': 'Niveau 2', 'niveau 3': 'Niveau 3', 'niveau 4': 'Niveau 4' };
 
@@ -842,8 +894,21 @@ async function goStep3() {
     kerntaken = (kerntakenData && kerntakenData[crebo]) ? kerntakenData[crebo] : null;
   }
 
-  document.getElementById('loading-text').innerHTML =
-    'Opgaven genereren voor <strong>' + opleiding + ', ' + nl + ' — ' + selectedDomain + '</strong>';
+  // Wisselende voortgangsteksten tijdens het wachten
+  const loadingStappen = [
+    'Beroepscontext bepalen voor <strong>' + opleiding + '</strong>\u2026',
+    'Rekensituaties zoeken bij <strong>' + selectedDomain + '</strong>\u2026',
+    'Rekenstappen uitwerken op <strong>' + nl + '</strong>\u2026',
+    'Antwoorden en uitwerkingen controleren\u2026',
+    'Bijna klaar\u2026'
+  ];
+  let loadingStapIndex = 0;
+  const loadingEl = document.getElementById('loading-text');
+  loadingEl.innerHTML = loadingStappen[0];
+  const loadingInterval = setInterval(() => {
+    loadingStapIndex = Math.min(loadingStapIndex + 1, loadingStappen.length - 1);
+    loadingEl.innerHTML = loadingStappen[loadingStapIndex];
+  }, 3000);
   document.getElementById('loading-3').style.display = 'block';
   document.getElementById('opgaven-list').style.display = 'none';
   document.getElementById('error-3').classList.remove('visible');
@@ -871,11 +936,13 @@ async function goStep3() {
       throw new Error(data.error || 'Onbekende fout');
     }
 
+    clearInterval(loadingInterval);
     gegenereerdeOpgaven = data.opgaven;
     gekozenOpgaveIndex = 0;
     renderOpgaven(data.opgaven, opleiding, nl);
 
   } catch (err) {
+    clearInterval(loadingInterval);
     document.getElementById('loading-3').style.display = 'none';
     document.getElementById('error-3-msg').textContent = 'Fout: ' + (err.message || 'Kon geen verbinding maken met de AI-service.');
     document.getElementById('error-3').classList.add('visible');
@@ -894,10 +961,18 @@ function renderOpgaven(opgaven, opleiding, niveauLabel) {
   opgaven.forEach((opgave, i) => {
     const card = document.createElement('div');
     card.className = 'opgave-card' + (i === 0 ? ' selected' : '');
-    card.onclick = () => selectOpgave(card, i);
+    card.onclick = (e) => {
+      // Klik op bewaar-knop of toggle mag kaart niet selecteren
+      if (e.target.closest('.bewaar-btn') || e.target.closest('.opgave-details-toggle')) return;
+      selectOpgave(card, i);
+    };
 
     const tags = (opgave.tags || []).map(t =>
       '<span class="tag' + (t === selectedDomain ? ' teal' : '') + '">' + t + '</span>'
+    ).join('');
+
+    const uitwerkingHtml = (opgave.uitwerking || []).map((s, j) =>
+      `<div style="font-size:12px;color:var(--ink-mid);padding:3px 0;border-bottom:1px solid var(--border);"><strong style="color:var(--teal);margin-right:6px;">Stap ${j+1}:</strong>${s}</div>`
     ).join('');
 
     card.innerHTML = `
@@ -906,9 +981,24 @@ function renderOpgaven(opgaven, opleiding, niveauLabel) {
       <p class="opgave-context">${opgave.contextbeschrijving || ''}</p>
       <p class="opgave-vraag">${opgave.vraag || ''}</p>
       <div class="opgave-tags">${tags}</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="opgave-details-toggle" onclick="toggleOpgaveDetails(this, ${i})" aria-expanded="false">
+          <span>Bekijk uitwerking</span> <span class="opgave-details-arrow">▼</span>
+        </button>
+        <button class="bewaar-btn" id="bewaar-btn-${i}" onclick="bewaarOpgave(${i})">
+          ＋ Bewaren
+        </button>
+      </div>
+      <div class="opgave-details" id="opgave-details-${i}">
+        ${opgave.antwoord ? `<div class="opgave-antwoord-preview" style="margin-bottom:8px;">Antwoord: <strong>${opgave.antwoord}</strong></div>` : ''}
+        ${uitwerkingHtml}
+      </div>
     `;
     container.appendChild(card);
   });
+
+  // Toon bewaar-mandje knop bijwerken
+  updateBewaarMandjeKnop();
 }
 
 function selectOpgave(el, index) {
@@ -1160,6 +1250,161 @@ function toggleDocentBlok(id) {
   document.getElementById('docent-blok-' + id).classList.toggle('open');
 }
 
+// ─── UITWERKING INKLAPBAAR (punt 3) ────────────────────────────────────────
+function toggleOpgaveDetails(btn, index) {
+  const details = document.getElementById('opgave-details-' + index);
+  const isOpen = details.classList.contains('open');
+  details.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  btn.querySelector('span:first-child').textContent = isOpen ? 'Bekijk uitwerking' : 'Verberg uitwerking';
+  btn.setAttribute('aria-expanded', !isOpen);
+}
+
+// ─── BEWAAR-MANDJE (punt 6) ─────────────────────────────────────────────────
+function bewaarOpgave(index) {
+  const opgave = gegenereerdeOpgaven[index];
+  if (!opgave) return;
+  const opleiding = document.getElementById('opleiding').value.trim();
+  const niveau = document.getElementById('niveau').value;
+  const nl = niveauLabelMap[niveau] || niveau;
+
+  const btn = document.getElementById('bewaar-btn-' + index);
+  const alBewaard = bewaardMandje.some(item => item.opgave === opgave);
+
+  if (alBewaard) {
+    // Verwijder uit mandje
+    bewaardMandje = bewaardMandje.filter(item => item.opgave !== opgave);
+    btn.innerHTML = '＋ Bewaren';
+    btn.classList.remove('bewaard');
+  } else {
+    // Voeg toe aan mandje
+    bewaardMandje.push({ opgave, opleiding, niveauLabel: nl, domein: selectedDomain });
+    btn.innerHTML = '✓ Bewaard';
+    btn.classList.add('bewaard');
+  }
+  updateBewaarMandjeKnop();
+}
+
+function updateBewaarMandjeKnop() {
+  const balk = document.getElementById('mandje-balk');
+  const teller = document.getElementById('mandje-teller');
+  if (bewaardMandje.length === 0) {
+    balk.classList.remove('visible');
+  } else {
+    balk.classList.add('visible');
+    teller.textContent = bewaardMandje.length + (bewaardMandje.length === 1 ? ' opgave bewaard' : ' opgaven bewaard');
+  }
+}
+
+function leegMandje() {
+  bewaardMandje = [];
+  // Reset alle bewaar-knoppen
+  document.querySelectorAll('.bewaar-btn').forEach(btn => {
+    btn.innerHTML = '＋ Bewaren';
+    btn.classList.remove('bewaard');
+  });
+  updateBewaarMandjeKnop();
+}
+
+function exporteerMandje() {
+  if (bewaardMandje.length === 0) return;
+
+  const niveauTitels = {
+    1: 'Niveau 1 — Doen in de praktijk',
+    2: 'Niveau 2 — Werken met een afbeelding',
+    3: 'Niveau 3 — Werken met een schema',
+    4: 'Niveau 4 — Zelfstandig berekenen'
+  };
+
+  let htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; margin: 2cm; color: #1A1A2E; }
+  h1 { font-size: 16pt; color: #0D7B6B; margin-bottom: 4pt; }
+  h2 { font-size: 13pt; color: #0D7B6B; margin-top: 18pt; margin-bottom: 6pt; border-bottom: 1pt solid #5BBFB0; padding-bottom: 3pt; }
+  h3 { font-size: 11pt; color: #3D3D5C; margin-top: 14pt; margin-bottom: 4pt; }
+  .meta { font-size: 9pt; color: #7A7A9A; margin-bottom: 16pt; }
+  .opgave-scheiding { border-top: 2pt solid #0D7B6B; margin: 24pt 0 16pt; padding-top: 10pt; }
+  .context-box { background: #F5F0E8; padding: 10pt; border-radius: 4pt; margin-bottom: 8pt; }
+  .vraag { font-weight: bold; font-size: 12pt; margin: 8pt 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin: 8pt 0; }
+  th { background: #EDE5D4; padding: 6pt 8pt; text-align: left; border: 0.5pt solid #ccc; }
+  td { padding: 6pt 8pt; border: 0.5pt solid #ccc; }
+  .note { background: #FDF0EB; border-left: 3pt solid #E8541E; padding: 8pt 10pt; font-size: 9pt; margin-top: 8pt; }
+  .niveau-label { display: inline-block; background: #E6F5F2; color: #0D7B6B; padding: 2pt 8pt; border-radius: 10pt; font-size: 9pt; font-weight: bold; margin-bottom: 8pt; }
+  @page { margin: 2cm; }
+</style>
+</head><body>
+<h1>RekenContext — Opgavenbundel</h1>
+<div class="meta">Gegenereerd op ${new Date().toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'})} &nbsp;|&nbsp; ${bewaardMandje.length} opgaven</div>`;
+
+  bewaardMandje.forEach((item, idx) => {
+    const opgave = item.opgave;
+    const stappen = opgave.stappen || [];
+    const uitwerking = opgave.uitwerking || [];
+
+    htmlContent += `<div class="opgave-scheiding">
+<h2>Opgave ${idx + 1}: ${opgave.titel || 'Opgave ' + (idx + 1)}</h2>
+<div class="meta">${item.opleiding} &nbsp;|&nbsp; ${item.niveauLabel} &nbsp;|&nbsp; ${item.domein}</div>`;
+
+    // Alle 4 niveaus per opgave
+    htmlContent += `
+<h3>${niveauTitels[1]}</h3>
+<div class="niveau-label">Informeel handelen</div>
+<div class="context-box"><strong>Docentinstructie:</strong> Zet materialen klaar die passen bij deze situatie. Laat de student de opgave uitvoeren alsof het een echte werksituatie is.</div>
+<div class="context-box"><strong>Situatie:</strong> ${opgave.contextbeschrijving || ''}</div>
+
+<h3>${niveauTitels[2]}</h3>
+<div class="niveau-label">Voorstellen concreet</div>
+<div class="context-box">${opgave.contextbeschrijving || ''}</div>
+<p><em>[Voeg hier een afbeelding toe.]</em></p>
+<div class="vraag">${opgave.vraag || ''}</div>
+
+<h3>${niveauTitels[3]}</h3>
+<div class="niveau-label">Voorstellen abstract</div>
+<div class="context-box">${opgave.contextbeschrijving || ''}</div>
+<table>
+  <thead><tr><th>Rekenstap</th><th>+/−/×/÷</th><th>Berekening</th><th>Uitkomst</th></tr></thead>
+  <tbody>
+    ${stappen.length > 0
+      ? stappen.map((s,i) => `<tr><td><strong>Stap ${i+1}:</strong> ${s.label||''}</td><td style="text-align:center;font-weight:bold">${s.operator||''}</td><td style="font-style:italic">${s.invoer_omschrijving||''}</td><td>………… ${s.eenheid||''}</td></tr>`).join('')
+      : '<tr><td>Stap 1</td><td>×</td><td>___ × ___</td><td>…</td></tr><tr><td>Stap 2</td><td>÷</td><td>___ ÷ ___</td><td>…</td></tr>'
+    }
+    <tr style="background:#E6F5F2"><td colspan="3" style="font-weight:bold;color:#0D7B6B">Antwoord</td><td style="font-weight:bold">……………</td></tr>
+  </tbody>
+</table>
+<div class="vraag">${opgave.vraag || ''}</div>
+
+<h3>${niveauTitels[4]}</h3>
+<div class="niveau-label">Formeel handelen</div>
+<div class="context-box">${opgave.contextbeschrijving || ''}</div>
+<div class="vraag">${opgave.vraag || ''} Laat je berekening zien.</div>`;
+
+    // Uitwerking voor docent
+    if (opgave.antwoord || uitwerking.length > 0) {
+      htmlContent += `<div style="margin-top:12pt;border:1pt solid #5BBFB0;border-radius:4pt;overflow:hidden;">
+<div style="padding:6pt 10pt;background:#E6F5F2;font-weight:bold;color:#0D7B6B;font-size:10pt;">🔑 Antwoord &amp; uitwerking (voor docent)</div>
+<div style="padding:10pt;">
+  ${opgave.antwoord ? `<p style="margin-bottom:8pt;font-size:12pt;">Antwoord: <strong style="color:#0D7B6B">${opgave.antwoord}</strong></p>` : ''}
+  ${uitwerking.length > 0 ? `<table><thead><tr><th>Stap</th><th>Uitwerking</th></tr></thead><tbody>${uitwerking.map((s,i) => `<tr><td style="font-weight:bold;color:#0D7B6B;white-space:nowrap">Stap ${i+1}</td><td>${s}</td></tr>`).join('')}</tbody></table>` : ''}
+</div></div>`;
+    }
+
+    htmlContent += `</div>`;
+  });
+
+  htmlContent += `</body></html>`;
+
+  const blob = new Blob(['﻿' + htmlContent], { type: 'application/msword;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'RekenContext_Bundel_' + bewaardMandje.length + '_opgaven.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ═══════════════════════════════════════════
 // DIFF TABS
 // ═══════════════════════════════════════════
@@ -1406,6 +1651,7 @@ function startOpnieuw() {
   selectedDomain = ''; maxStep = 1;
   gegenereerdeOpgaven = []; gekozenOpgaveIndex = 0;
   geselecteerdeNiveaus = new Set([1, 2, 3, 4]);
+  bewaardMandje = [];
   huidigCrebo = null;
   document.getElementById('opleiding').value = '';
   document.getElementById('niveau').value = '';
