@@ -1,0 +1,22 @@
+# public/_headers — Cloudflare Pages cache- en beveiligingsheaders
+# Vervangt de [[headers]]-blokken uit netlify.toml
+# Documentatie: https://developers.cloudflare.com/pages/configuration/headers/
+
+# ─── BEVEILIGINGSHEADERS OP ALLE ROUTES ──────────────────────────────────────
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# ─── CREBO-SLIM: DAGELIJKS GECACHED (86400 s = 1 dag) ────────────────────────
+/data/crebo-slim.json
+  Cache-Control: public, max-age=86400
+
+# ─── CREBO-KERNTAKEN: WEKELIJKS GECACHED (604800 s = 7 dagen) ────────────────
+/data/crebo-kerntaken.json
+  Cache-Control: public, max-age=604800
+
+# ─── BACKWARDS COMPATIBILITY: OOK HET ORIGINELE BESTAND SERVEREN ─────────────
+/data/crebo.json
+  Cache-Control: public, max-age=86400
