@@ -13,6 +13,7 @@
     --warm: #F5F0E8; --warm-dark: #EDE5D4;
     --accent: #E8541E; --accent-light: #FDF0EB;
     --white: #FDFCFA; --red: #C0392B; --red-light: #FDECEA;
+    --purple: #7F77DD; --purple-light: #F0EFFF;
     --border: rgba(26,26,46,0.12);
     --shadow: 0 2px 16px rgba(26,26,46,0.08);
     --r: 10px;
@@ -73,6 +74,39 @@
   .crebo-unknown { display:none; align-items:center; gap:8px; padding:9px 12px; background:var(--accent-light); border:1px solid rgba(232,84,30,0.3); border-radius:7px; font-size:12px; color:var(--accent); margin-top:6px; }
   .crebo-unknown.visible { display:flex; }
 
+  /* NAAM-ZOEKDROPDOWN */
+  .naam-zoek-wrapper { position:relative; }
+  .naam-zoek-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--white); border:1.5px solid var(--teal-mid); border-radius:8px; box-shadow:0 8px 24px rgba(26,26,46,0.13); z-index:200; max-height:240px; overflow-y:auto; display:none; }
+  .naam-zoek-dropdown.open { display:block; }
+  .naam-zoek-item { padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.12s; }
+  .naam-zoek-item:last-child { border-bottom:none; }
+  .naam-zoek-item:hover, .naam-zoek-item.actief { background:var(--teal-light); }
+  .naam-zoek-naam { font-size:14px; font-weight:500; color:var(--ink); }
+  .naam-zoek-meta { font-size:11px; color:var(--ink-soft); margin-top:1px; }
+  .naam-zoek-item.actief .naam-zoek-naam { color:var(--teal); }
+  .naam-zoek-geen { padding:12px 14px; font-size:13px; color:var(--ink-soft); font-style:italic; }
+  .naam-zoek-hint { font-size:11px; color:var(--ink-soft); margin-top:5px; }
+
+  /* DOCENTBLOK — uitklapbaar antwoord + uitwerking */
+  .docent-blok { margin-top:14px; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+  .docent-blok-toggle { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; cursor:pointer; background:var(--warm); user-select:none; transition:background 0.15s; }
+  .docent-blok-toggle:hover { background:var(--warm-dark); }
+  .docent-blok-toggle-left { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink-mid); }
+  .docent-blok-toggle-icon { font-size:14px; }
+  .docent-blok-arrow { font-size:11px; color:var(--ink-soft); transition:transform 0.2s; }
+  .docent-blok.open .docent-blok-arrow { transform:rotate(180deg); }
+  .docent-blok-body { display:none; padding:16px; border-top:1px solid var(--border); background:var(--white); }
+  .docent-blok.open .docent-blok-body { display:block; }
+  .docent-antwoord { font-size:14px; color:var(--ink); margin-bottom:10px; }
+  .docent-antwoord strong { color:var(--teal); }
+  .docent-uitwerking-stap { display:flex; gap:10px; padding:5px 0; border-bottom:1px solid var(--border); align-items:baseline; }
+  .docent-uitwerking-stap:last-child { border-bottom:none; }
+  .docent-stap-num { font-size:11px; font-weight:700; color:var(--teal); min-width:52px; padding-top:2px; flex-shrink:0; }
+  .docent-stap-tekst { font-size:13px; color:var(--ink-mid); line-height:1.55; }
+
+  /* Print: docentblok nooit afdrukken */
+  @media print { .docent-blok { display:none !important; } }
+
   /* DOMAIN GRID */
   .domain-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin-bottom:24px; }
   .domain-card { border:2px solid var(--border); border-radius:var(--r); padding:18px 20px; cursor:pointer; transition:all 0.18s; background:var(--white); position:relative; }
@@ -94,6 +128,8 @@
   .btn-secondary:hover { border-color:var(--teal-mid); color:var(--teal); }
   .btn-accent { background:var(--accent); color:white; }
   .btn-accent:hover { background:#C8411A; transform:translateY(-1px); }
+  .btn-purple { background:var(--purple); color:white; }
+  .btn-purple:hover { background:#6960CC; transform:translateY(-1px); }
   .btn-row { display:flex; align-items:center; gap:12px; margin-top:28px; flex-wrap:wrap; }
 
   /* LOADING */
@@ -127,18 +163,12 @@
   .tag { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; background:var(--warm-dark); color:var(--ink-mid); }
   .tag.teal { background:var(--teal-light); color:var(--teal); }
 
-  /* HANDELINGSMODEL UITLEG */
+  /* ── VERBETERING 3: HANDELINGSMODEL ALTIJD ZICHTBAAR ── */
   .hm-uitleg { background:var(--white); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:24px; box-shadow:var(--shadow); }
-  .hm-toggle { display:flex; align-items:center; justify-content:space-between; padding:15px 20px; cursor:pointer; user-select:none; transition:background 0.15s; }
-  .hm-toggle:hover { background:var(--warm); }
-  .hm-toggle-left { display:flex; align-items:center; gap:10px; }
-  .hm-toggle-icon { width:28px; height:28px; border-radius:6px; background:var(--teal-light); display:flex; align-items:center; justify-content:center; font-size:14px; }
-  .hm-toggle-text { font-size:14px; font-weight:500; color:var(--ink); }
-  .hm-toggle-sub { font-size:12px; color:var(--ink-soft); }
-  .hm-arrow { font-size:12px; color:var(--ink-soft); transition:transform 0.2s; }
-  .hm-uitleg.open .hm-arrow { transform:rotate(180deg); }
-  .hm-body { display:none; border-top:1px solid var(--border); }
-  .hm-uitleg.open .hm-body { display:block; }
+  .hm-header { display:flex; align-items:center; gap:10px; padding:15px 20px; border-bottom:1px solid var(--border); background:var(--warm); }
+  .hm-header-icon { width:28px; height:28px; border-radius:6px; background:var(--teal-light); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .hm-header-text { font-size:14px; font-weight:600; color:var(--ink); }
+  .hm-header-sub { font-size:12px; color:var(--ink-soft); }
   .hm-niveaus { display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
   .hm-niveau { padding:16px 18px; border-right:1px solid var(--border); }
   .hm-niveau:last-child { border-right:none; }
@@ -177,11 +207,18 @@
   .diff-box li { margin-bottom:6px; }
   .teacher-note { background:var(--accent-light); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:12px 16px; font-size:13px; color:var(--ink-mid); line-height:1.55; margin-bottom:13px; }
   .teacher-note strong { color:var(--accent); }
+
+  /* ── VERBETERING 1: DYNAMISCHE INVULTABEL ── */
   .diff-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:4px; }
   .diff-table th { padding:9px 12px; text-align:left; background:var(--warm-dark); border:1px solid var(--border); font-weight:600; color:var(--ink-mid); }
   .diff-table td { padding:9px 12px; border:1px solid var(--border); color:var(--ink); }
+  .diff-table .operator-cell { text-align:center; font-size:16px; font-weight:700; color:var(--teal); width:40px; }
+  .diff-table .invoer-cell { font-style:italic; color:var(--ink-soft); font-size:12px; }
+  .diff-table .uitkomst-cell { font-weight:600; color:var(--teal); min-width:90px; }
+  .diff-table input.tabel-invoer { border:none; border-bottom:1.5px solid var(--teal-mid); background:transparent; width:100%; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--ink); padding:2px 4px; outline:none; }
+  .diff-table input.tabel-invoer:focus { border-bottom-color:var(--teal); }
 
-  /* OVERVIEW */
+  /* ── VERBETERING 2: OVERZICHT NIVEAUS VOLLEDIG ── */
   .overview-level { border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:14px; background:var(--white); }
   .overview-header { display:flex; align-items:center; gap:12px; padding:12px 18px; background:var(--warm-dark); border-bottom:1px solid var(--border); }
   .overview-num { width:26px; height:26px; border-radius:50%; background:var(--teal); color:white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
@@ -192,20 +229,47 @@
   .overview-body ul { padding-left:18px; }
   .overview-body li { margin-bottom:4px; }
   .overview-note { font-size:12px; color:var(--accent); padding:9px 18px 10px; border-top:1px solid var(--border); background:var(--accent-light); }
+  .overview-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+  .overview-table th { padding:7px 10px; background:var(--warm-dark); border:1px solid var(--border); font-weight:600; color:var(--ink-mid); text-align:left; }
+  .overview-table td { padding:7px 10px; border:1px solid var(--border); color:var(--ink); }
 
-  /* NT2 — sectie stijl (toggle en resultaat komen later) */
+  /* ── VERBETERING 4: NT2-SECTIE ── */
   .nt2-section { margin-top:26px; border-top:1px solid var(--border); padding-top:22px; }
-  .nt2-section h3 { font-size:15px; font-weight:600; color:var(--ink); margin-bottom:4px; }
+  .nt2-section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .nt2-section h3 { font-size:15px; font-weight:600; color:var(--ink); }
   .nt2-section > p { font-size:13px; color:var(--ink-soft); margin-bottom:13px; }
+  .nt2-result { display:none; margin-top:16px; }
+  .nt2-result.visible { display:block; animation:fadeUp 0.25s ease; }
+  .nt2-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:13px; }
+  .nt2-box { background:var(--purple-light); border:1px solid rgba(127,119,221,0.3); border-radius:8px; padding:16px; }
+  .nt2-box h4 { font-size:11px; font-weight:600; color:var(--purple); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.06em; }
+  .nt2-box p { font-size:13.5px; color:var(--ink); line-height:1.65; }
+  .nt2-woordenlijst { background:var(--warm); border-radius:8px; padding:14px 16px; margin-bottom:13px; }
+  .nt2-woordenlijst h4 { font-size:11px; font-weight:600; color:var(--ink-soft); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em; }
+  .nt2-woord { display:flex; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .nt2-woord:last-child { border-bottom:none; }
+  .nt2-woord strong { color:var(--purple); min-width:120px; flex-shrink:0; }
+  .nt2-docent-note { background:var(--accent-light); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:11px 15px; font-size:13px; color:var(--ink-mid); line-height:1.5; }
+  .nt2-docent-note strong { color:var(--accent); }
+  .nt2-loading { display:none; align-items:center; gap:10px; padding:14px 16px; background:var(--white); border:1px solid var(--border); border-radius:8px; font-size:13px; color:var(--ink-soft); }
+  .nt2-loading.visible { display:flex; }
+  .nt2-spinner { width:18px; height:18px; border:2px solid var(--purple-light); border-top-color:var(--purple); border-radius:50%; animation:spin 0.75s linear infinite; flex-shrink:0; }
 
-  /* EXPORT */
+  /* ── VERBETERING 5: NIVEAU-SELECTIE VOOR EXPORT ── */
   .export-section { margin-top:24px; border-top:1px solid var(--border); padding-top:22px; }
-  .export-section h3 { font-size:15px; font-weight:600; color:var(--ink); margin-bottom:13px; }
+  .export-section h3 { font-size:15px; font-weight:600; color:var(--ink); margin-bottom:6px; }
+  .export-section > p { font-size:13px; color:var(--ink-soft); margin-bottom:14px; }
+  .niveau-selectie { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .niveau-check { display:flex; align-items:center; gap:7px; padding:7px 14px; border:1.5px solid var(--border); border-radius:7px; cursor:pointer; font-size:13px; font-weight:500; color:var(--ink-mid); background:var(--white); transition:all 0.15s; user-select:none; }
+  .niveau-check:hover { border-color:var(--teal-mid); color:var(--teal); }
+  .niveau-check.geselecteerd { border-color:var(--teal); background:var(--teal-light); color:var(--teal); }
+  .niveau-check input[type="checkbox"] { display:none; }
+  .niveau-check-icon { font-size:14px; }
   .export-grid { display:flex; flex-wrap:wrap; gap:9px; }
   .export-btn { display:inline-flex; align-items:center; gap:8px; padding:9px 17px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--ink-mid); transition:all 0.15s; }
   .export-btn:hover { border-color:var(--teal-mid); color:var(--teal); background:var(--teal-light); }
-  .export-btn.soon { opacity:0.4; cursor:default; }
-  .export-btn.soon:hover { border-color:var(--border); color:var(--ink-mid); background:var(--white); }
+  .export-btn.word-btn { border-color:var(--teal-mid); background:var(--teal-light); color:var(--teal); }
+  .export-btn.word-btn:hover { background:var(--teal); color:white; }
   .soon-tag { font-size:10px; background:var(--warm-dark); padding:1px 6px; border-radius:4px; color:var(--ink-soft); }
 
   /* RESPONSIVE */
@@ -219,7 +283,7 @@
     .diff-tabs{grid-template-columns:repeat(3,1fr)}
     .hm-niveaus{grid-template-columns:1fr 1fr}
     .hm-niveau{border-right:none;border-bottom:1px solid var(--border)}
-    .nt2-comparison{grid-template-columns:1fr}
+    .nt2-grid{grid-template-columns:1fr}
   }
 </style>
 </head>
@@ -247,35 +311,40 @@
   <div class="screen active" id="screen-1">
     <div class="screen-header">
       <h1>Voor welke opleiding maak je een opgave?</h1>
-      <p>Vul het crebo-nummer in — de opleidingsnaam verschijnt automatisch. Of typ direct de naam van de opleiding.</p>
+      <p>Zoek op naam of crebo-nummer. De kerntaken worden automatisch meegenomen voor nauwkeurigere opgaven.</p>
     </div>
     <div class="card">
+
+      <!-- NAAM-ZOEKVELD (primair) -->
       <div class="field-group">
-        <label>Crebo-nummer <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--ink-soft)">(optioneel — voor nauwkeurigere opgaven)</span></label>
-        <div class="crebo-row">
+        <label>Naam van de opleiding</label>
+        <div class="naam-zoek-wrapper">
+          <input type="text" id="opleiding" placeholder="Typ bijv. Verzorgende, Kok of Elektro…"
+                 autocomplete="off"
+                 oninput="zoekOpleiding(this.value)"
+                 onkeydown="zoekKeydown(event)">
+          <div class="naam-zoek-dropdown" id="naam-zoek-dropdown"></div>
+        </div>
+        <div class="naam-zoek-hint" id="naam-zoek-hint"></div>
+        <div class="field-error" id="err-opleiding">⚠ Kies of typ een opleiding om verder te gaan.</div>
+      </div>
+
+      <!-- CREBO + NIVEAU (worden auto-ingevuld bij keuze, handmatig instelbaar) -->
+      <div class="field-row">
+        <div class="field-group">
+          <label>Crebo-nummer <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--ink-soft)">(optioneel)</span></label>
           <div>
-            <input type="text" id="crebo" placeholder="bijv. 25491" maxlength="6" oninput="lookupCrebo(this.value)" style="text-align:center;font-size:18px;font-weight:600;letter-spacing:0.05em;">
-          </div>
-          <div>
-            <div class="crebo-confirmed" id="crebo-confirmed">
+            <input type="text" id="crebo" placeholder="bijv. 25491" maxlength="6"
+                   oninput="lookupCrebo(this.value)"
+                   style="text-align:center;font-size:17px;font-weight:600;letter-spacing:0.05em;">
+            <div class="crebo-confirmed" id="crebo-confirmed" style="margin-top:6px;">
               <span class="check">✓</span>
               <span id="crebo-naam-display">—</span>
             </div>
-            <div id="crebo-naam-placeholder" style="display:flex;align-items:center;padding:11px 14px;background:var(--warm);border:1.5px dashed var(--border);border-radius:7px;font-size:13px;color:var(--ink-soft);">
-              Naam verschijnt hier na invoer crebo
+            <div class="crebo-unknown" id="crebo-unknown">
+              ⚠ Crebo niet herkend — naam handmatig ingevuld.
             </div>
           </div>
-        </div>
-        <div class="crebo-unknown visible" id="crebo-unknown" style="display:none!important;">
-          ⚠ Crebo-nummer niet herkend. Vul hieronder de opleidingsnaam handmatig in.
-        </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field-group">
-          <label for="opleiding">Naam van de opleiding</label>
-          <input type="text" id="opleiding" placeholder="bijv. Verzorgende IG">
-          <div class="field-error" id="err-opleiding">⚠ Vul de naam van de opleiding in om verder te gaan.</div>
         </div>
         <div class="field-group">
           <label for="niveau">Mbo-niveau</label>
@@ -289,6 +358,12 @@
           <div class="field-error" id="err-niveau">⚠ Kies een mbo-niveau om verder te gaan.</div>
         </div>
       </div>
+
+      <!-- KERNTAKEN BEVESTIGING -->
+      <div id="kerntaken-bevestiging" style="display:none; padding:9px 13px; background:var(--teal-light); border:1px solid var(--teal-mid); border-radius:7px; font-size:13px; color:var(--teal); margin-bottom:4px;">
+        ✓ <span id="kerntaken-aantal">0</span> kerntaken gevonden — worden meegestuurd naar de AI.
+      </div>
+
       <div class="btn-row">
         <button class="btn btn-primary" onclick="goStep2()">Kies rekendomein →</button>
       </div>
@@ -377,47 +452,42 @@
 
     <div id="context-chip-4" class="context-chip"></div>
 
-    <!-- HANDELINGSMODEL UITLEG (inklapbaar) -->
+    <!-- ── VERBETERING 3: HANDELINGSMODEL ALTIJD ZICHTBAAR (geen toggle) ── -->
     <div class="hm-uitleg" id="hm-uitleg">
-      <div class="hm-toggle" onclick="toggleHM()">
-        <div class="hm-toggle-left">
-          <div class="hm-toggle-icon">🎓</div>
-          <div>
-            <div class="hm-toggle-text">Wat is het handelingsmodel?</div>
-            <div class="hm-toggle-sub">Klik om de vier niveaus te bekijken</div>
-          </div>
+      <div class="hm-header">
+        <div class="hm-header-icon">🎓</div>
+        <div>
+          <div class="hm-header-text">Het ERWD-handelingsmodel</div>
+          <div class="hm-header-sub">Vier niveaus van informeel naar formeel handelen</div>
         </div>
-        <div class="hm-arrow">▼</div>
       </div>
-      <div class="hm-body">
-        <div class="hm-niveaus">
-          <div class="hm-niveau">
-            <div class="hm-niveau-num">1</div>
-            <h4>Doen in de praktijk</h4>
-            <p>De student handelt in een echte situatie — meten, verdelen, uitvoeren. Geen papier, geen sommen. Begrip ontstaat door doen.</p>
-            <div class="hm-voorbeeld">Bijv. ingrediënten daadwerkelijk afwegen</div>
-          </div>
-          <div class="hm-niveau">
-            <div class="hm-niveau-num">2</div>
-            <h4>Werken met een afbeelding</h4>
-            <p>De student werkt met een foto of tekening van de situatie. De werkelijkheid is zichtbaar, maar de student voert de handeling op papier uit.</p>
-            <div class="hm-voorbeeld">Bijv. foto van een etiket en weegschaal</div>
-          </div>
-          <div class="hm-niveau">
-            <div class="hm-niveau-num">3</div>
-            <h4>Werken met een schema</h4>
-            <p>De student gebruikt een denkmodel: een invultabel, getallenlijn of verhoudingsschema. Geen echte afbeelding meer — wel structuur.</p>
-            <div class="hm-voorbeeld">Bijv. invultabel met drie rekenstappen</div>
-          </div>
-          <div class="hm-niveau">
-            <div class="hm-niveau-num">4</div>
-            <h4>Zelfstandig berekenen</h4>
-            <p>De student werkt met tekst en getallen, zonder visuele steun. Structureert het rekenproces zelf en controleert zijn antwoord.</p>
-            <div class="hm-voorbeeld">Bijv. opgave in lopende tekst, geen hulpstructuur</div>
-          </div>
+      <div class="hm-niveaus">
+        <div class="hm-niveau">
+          <div class="hm-niveau-num">1</div>
+          <h4>Doen in de praktijk</h4>
+          <p>De student handelt in een echte situatie — meten, verdelen, uitvoeren. Geen papier, geen sommen. Begrip ontstaat door doen.</p>
+          <div class="hm-voorbeeld">Bijv. ingrediënten daadwerkelijk afwegen</div>
         </div>
-        <div class="hm-footer"><strong>Didactisch principe:</strong> Studenten die vastlopen op niveau 4 (kale sommen) hebben baat bij terugschakelen naar een lager niveau — niet bij meer oefening op hetzelfde niveau.</div>
+        <div class="hm-niveau">
+          <div class="hm-niveau-num">2</div>
+          <h4>Werken met een afbeelding</h4>
+          <p>De student werkt met een foto of tekening van de situatie. De werkelijkheid is zichtbaar, maar de student voert de handeling op papier uit.</p>
+          <div class="hm-voorbeeld">Bijv. foto van een etiket en weegschaal</div>
+        </div>
+        <div class="hm-niveau">
+          <div class="hm-niveau-num">3</div>
+          <h4>Werken met een schema</h4>
+          <p>De student gebruikt een denkmodel: een invultabel, getallenlijn of verhoudingsschema. Geen echte afbeelding meer — wel structuur.</p>
+          <div class="hm-voorbeeld">Bijv. invultabel met drie rekenstappen</div>
+        </div>
+        <div class="hm-niveau">
+          <div class="hm-niveau-num">4</div>
+          <h4>Zelfstandig berekenen</h4>
+          <p>De student werkt met tekst en getallen, zonder visuele steun. Structureert het rekenproces zelf en controleert zijn antwoord.</p>
+          <div class="hm-voorbeeld">Bijv. opgave in lopende tekst, geen hulpstructuur</div>
+        </div>
       </div>
+      <div class="hm-footer"><strong>Didactisch principe:</strong> Studenten die vastlopen op niveau 4 (kale sommen) hebben baat bij terugschakelen naar een lager niveau — niet bij meer oefening op hetzelfde niveau.</div>
     </div>
 
     <!-- DIFF TABS -->
@@ -456,20 +526,51 @@
     <div class="diff-content" id="diff-4"></div>
     <div class="diff-content" id="diff-5"></div>
 
-    <!-- NT2 -->
+    <!-- ── VERBETERING 4: NT2 ALS ECHTE AI-AANROEP ── -->
     <div class="nt2-section">
-      <h3>NT2-aanpassing</h3>
-      <p>Een vereenvoudigde versie van de opgave voor studenten die Nederlands als tweede taal leren — <em>binnenkort beschikbaar</em>.</p>
+      <div class="nt2-section-header">
+        <div>
+          <h3>NT2-aanpassing</h3>
+          <p>Een taalvereenvoudigde versie van de opgave voor studenten die Nederlands als tweede taal leren.</p>
+        </div>
+        <button class="btn btn-purple" id="btn-nt2" onclick="genereerNt2()" style="flex-shrink:0;">
+          🌐 Genereer NT2-versie
+        </button>
+      </div>
+      <div class="nt2-loading" id="nt2-loading">
+        <div class="nt2-spinner"></div>
+        <span>NT2-versie wordt gegenereerd…</span>
+      </div>
+      <div class="nt2-result" id="nt2-result"></div>
     </div>
 
-    <!-- EXPORT -->
+    <!-- ── VERBETERING 5: NIVEAU-SELECTIE + WORD-EXPORT ── -->
     <div class="export-section">
       <h3>Exporteren</h3>
+      <p>Selecteer welke niveaus je wilt exporteren:</p>
+      <div class="niveau-selectie" id="niveau-selectie">
+        <label class="niveau-check geselecteerd" id="check-n1">
+          <input type="checkbox" checked onchange="toggleNiveauCheck(1, this.checked)">
+          <span class="niveau-check-icon">1</span> Doen in de praktijk
+        </label>
+        <label class="niveau-check geselecteerd" id="check-n2">
+          <input type="checkbox" checked onchange="toggleNiveauCheck(2, this.checked)">
+          <span class="niveau-check-icon">2</span> Werken met afbeelding
+        </label>
+        <label class="niveau-check geselecteerd" id="check-n3">
+          <input type="checkbox" checked onchange="toggleNiveauCheck(3, this.checked)">
+          <span class="niveau-check-icon">3</span> Werken met schema
+        </label>
+        <label class="niveau-check geselecteerd" id="check-n4">
+          <input type="checkbox" checked onchange="toggleNiveauCheck(4, this.checked)">
+          <span class="niveau-check-icon">4</span> Zelfstandig berekenen
+        </label>
+      </div>
       <div class="export-grid">
-        <div class="export-btn soon">📄 Word-document <span class="soon-tag">binnenkort</span></div>
-        <div class="export-btn soon">🖨 Leskaart printen <span class="soon-tag">binnenkort</span></div>
+        <div class="export-btn word-btn" onclick="exporteerWord()">📄 Word-document downloaden</div>
         <div class="export-btn" onclick="kopieerTekst()">📋 Tekst kopiëren</div>
-        <div class="export-btn soon">👥 Teamslide <span class="soon-tag">binnenkort</span></div>
+        <div class="export-btn" onclick="window.print()">🖨 Afdrukken</div>
+        <div class="export-btn" style="opacity:0.4;cursor:default;">👥 Teamslide <span class="soon-tag">binnenkort</span></div>
       </div>
     </div>
 
@@ -483,50 +584,175 @@
 
 <script>
 // ═══════════════════════════════════════════
-// CREBO DATABASE (geladen uit JSON)
+// CREBO DATABASE — gesplitst voor snelle load
+// Stap 1: laad slanke lookup (83 KB) bij opstart
+// Stap 2: laad kerntaken (1,6 MB) lazy bij crebo-invoer
 // ═══════════════════════════════════════════
 let creboData = [];
-fetch('/data/crebo.json')
+let kerntakenData = null; // null = nog niet geladen
+
+fetch('/data/crebo-slim.json')
   .then(r => r.json())
   .then(d => { creboData = d; })
-  .catch(() => console.warn('Crebo data niet geladen'));
+  .catch(() => {
+    // Fallback naar origineel bestand voor backwards compatibility
+    fetch('/data/crebo.json')
+      .then(r => r.json())
+      .then(d => { creboData = d; })
+      .catch(() => console.warn('Crebo data niet geladen'));
+  });
 
+async function laadKerntaken() {
+  if (kerntakenData !== null) return;
+  try {
+    const r = await fetch('/data/crebo-kerntaken.json');
+    kerntakenData = await r.json();
+  } catch {
+    kerntakenData = {};
+    console.warn('Kerntaken data niet geladen');
+  }
+}
+
+// ─── NAAM-ZOEKDROPDOWN ──────────────────────────────────────────────────────
+let zoekTimeout = null;
+let zoekActiefIndex = -1;
+let huidigCrebo = null; // crebo van de geselecteerde opleiding (null = handmatig)
+
+function zoekOpleiding(val) {
+  clearTimeout(zoekTimeout);
+  const dropdown = document.getElementById('naam-zoek-dropdown');
+  const hint = document.getElementById('naam-zoek-hint');
+  huidigCrebo = null;
+  toonKerntakenBevestiging(null);
+
+  if (val.trim().length < 2) {
+    sluitDropdown();
+    hint.textContent = '';
+    return;
+  }
+
+  // Debounce 120ms voor vloeiende typeervaring
+  zoekTimeout = setTimeout(() => {
+    const q = val.trim().toLowerCase();
+    const resultaten = creboData
+      .filter(c => c.naam.toLowerCase().includes(q))
+      .slice(0, 8);
+
+    if (resultaten.length === 0) {
+      dropdown.innerHTML = '<div class="naam-zoek-geen">Geen opleiding gevonden — naam wordt handmatig doorgegeven aan de AI.</div>';
+      dropdown.classList.add('open');
+      hint.textContent = 'Tip: typ minimaal 2 letters van de opleidingsnaam.';
+    } else {
+      dropdown.innerHTML = resultaten.map((c, i) =>
+        `<div class="naam-zoek-item" data-crebo="${c.crebo}" data-naam="${c.naam}" data-niveau="${c.niveau}" data-sector="${c.sector}"
+              onmousedown="kiesOpleiding('${c.crebo}','${c.naam.replace(/'/g,"\'")}',${c.niveau},'${c.sector.replace(/'/g,"\'")}')">
+          <div class="naam-zoek-naam">${c.naam}</div>
+          <div class="naam-zoek-meta">Crebo ${c.crebo} &nbsp;·&nbsp; ${c.sector} &nbsp;·&nbsp; Niveau ${c.niveau}</div>
+        </div>`
+      ).join('');
+      dropdown.classList.add('open');
+      hint.textContent = resultaten.length === 8 ? 'Top 8 resultaten — typ verder om te verfijnen.' : '';
+    }
+    zoekActiefIndex = -1;
+  }, 120);
+}
+
+function zoekKeydown(e) {
+  const dropdown = document.getElementById('naam-zoek-dropdown');
+  const items = dropdown.querySelectorAll('.naam-zoek-item');
+  if (!dropdown.classList.contains('open') || items.length === 0) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    zoekActiefIndex = Math.min(zoekActiefIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('actief', i === zoekActiefIndex));
+    items[zoekActiefIndex]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    zoekActiefIndex = Math.max(zoekActiefIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('actief', i === zoekActiefIndex));
+    items[zoekActiefIndex]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter' && zoekActiefIndex >= 0) {
+    e.preventDefault();
+    const el = items[zoekActiefIndex];
+    kiesOpleiding(el.dataset.crebo, el.dataset.naam, parseInt(el.dataset.niveau), el.dataset.sector);
+  } else if (e.key === 'Escape') {
+    sluitDropdown();
+  }
+}
+
+function kiesOpleiding(crebo, naam, niveau, sector) {
+  document.getElementById('opleiding').value = naam;
+  document.getElementById('crebo').value = crebo;
+  document.getElementById('crebo-naam-display').textContent = naam + ' · ' + sector;
+  document.getElementById('crebo-confirmed').classList.add('visible');
+  document.getElementById('crebo-unknown').style.display = 'none';
+  const niveauMap = { 1: 'entree', 2: 'niveau 2', 3: 'niveau 3', 4: 'niveau 4' };
+  document.getElementById('niveau').value = niveauMap[niveau] || '';
+  document.getElementById('err-opleiding').classList.remove('visible');
+  document.getElementById('err-niveau').classList.remove('visible');
+  document.getElementById('opleiding').classList.remove('error');
+  document.getElementById('niveau').classList.remove('error');
+  sluitDropdown();
+  huidigCrebo = crebo;
+  // Laad kerntaken alvast op de achtergrond
+  laadKerntaken().then(() => toonKerntakenBevestiging(crebo));
+  updateGenereerKnop();
+}
+
+function sluitDropdown() {
+  document.getElementById('naam-zoek-dropdown').classList.remove('open');
+  zoekActiefIndex = -1;
+}
+
+function toonKerntakenBevestiging(crebo) {
+  const el = document.getElementById('kerntaken-bevestiging');
+  if (!crebo || !kerntakenData || !kerntakenData[crebo]) {
+    el.style.display = 'none';
+    return;
+  }
+  const aantal = kerntakenData[crebo].length;
+  document.getElementById('kerntaken-aantal').textContent = aantal;
+  el.style.display = 'block';
+}
+
+// Sluit dropdown bij klik buiten het veld
+document.addEventListener('click', e => {
+  if (!e.target.closest('.naam-zoek-wrapper')) sluitDropdown();
+});
+
+// ─── CREBO DIRECT INVOEREN (nog steeds mogelijk) ────────────────────────────
 function lookupCrebo(val) {
   const v = val.trim();
   const confirmed = document.getElementById('crebo-confirmed');
-  const placeholder = document.getElementById('crebo-naam-placeholder');
   const unknown = document.getElementById('crebo-unknown');
   const naamInput = document.getElementById('opleiding');
   const niveauSelect = document.getElementById('niveau');
 
   confirmed.classList.remove('visible');
   unknown.style.display = 'none';
+  huidigCrebo = null;
+  toonKerntakenBevestiging(null);
 
-  if (v.length < 4) {
-    placeholder.style.display = 'flex';
-    return;
-  }
+  if (v.length < 4) return;
+  laadKerntaken();
 
   const match = creboData.find(c => c.crebo === v);
   if (match) {
-    placeholder.style.display = 'none';
-    document.getElementById('crebo-naam-display').textContent =
-      match.naam + (match.uitstroom ? ' — ' + match.uitstroom : '') + ' · ' + match.sector;
+    document.getElementById('crebo-naam-display').textContent = match.naam + ' · ' + match.sector;
     confirmed.classList.add('visible');
-    // Auto-fill naam en niveau
-    naamInput.value = match.naam + (match.uitstroom ? ' — ' + match.uitstroom : '');
+    naamInput.value = match.naam;
     const niveauMap = { 1: 'entree', 2: 'niveau 2', 3: 'niveau 3', 4: 'niveau 4' };
     niveauSelect.value = niveauMap[match.niveau] || '';
-    // Clear errors
     document.getElementById('err-opleiding').classList.remove('visible');
     document.getElementById('err-niveau').classList.remove('visible');
     naamInput.classList.remove('error');
     niveauSelect.classList.remove('error');
+    huidigCrebo = v;
+    laadKerntaken().then(() => toonKerntakenBevestiging(v));
+    updateGenereerKnop();
   } else if (v.length >= 5) {
-    placeholder.style.display = 'none';
     unknown.style.display = 'flex';
-  } else {
-    placeholder.style.display = 'flex';
   }
 }
 
@@ -537,6 +763,7 @@ let selectedDomain = '';
 let maxStep = 1;
 let gegenereerdeOpgaven = [];
 let gekozenOpgaveIndex = 0;
+let geselecteerdeNiveaus = new Set([1, 2, 3, 4]);
 
 const niveauLabelMap = { 'entree': 'Entree', 'niveau 2': 'Niveau 2', 'niveau 3': 'Niveau 3', 'niveau 4': 'Niveau 4' };
 
@@ -603,9 +830,17 @@ async function goStep3() {
   const opleiding = document.getElementById('opleiding').value.trim();
   const niveau = document.getElementById('niveau').value;
   const nl = niveauLabelMap[niveau] || niveau;
-  const crebo = document.getElementById('crebo').value.trim();
-  const match = creboData.find(c => c.crebo === crebo);
+  // Gebruik huidigCrebo (ingesteld via dropdown of directe crebo-invoer)
+  const crebo = huidigCrebo || document.getElementById('crebo').value.trim() || null;
+  const match = crebo ? creboData.find(c => c.crebo === crebo) : null;
   const sector = match ? match.sector : '';
+
+  // Kerntaken ophalen — altijd via huidigCrebo, ook als naam handmatig is getypt
+  let kerntaken = null;
+  if (crebo) {
+    await laadKerntaken();
+    kerntaken = (kerntakenData && kerntakenData[crebo]) ? kerntakenData[crebo] : null;
+  }
 
   document.getElementById('loading-text').innerHTML =
     'Opgaven genereren voor <strong>' + opleiding + ', ' + nl + ' — ' + selectedDomain + '</strong>';
@@ -617,7 +852,7 @@ async function goStep3() {
   showStep(3);
 
   try {
-    const response = await fetch('/.netlify/functions/genereer-opgaven', {
+    const response = await fetch('/api/genereer-opgaven', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -626,7 +861,7 @@ async function goStep3() {
         niveau: nl,
         domein: selectedDomain,
         sector: sector,
-        kerntaken: match ? (match.kerntaken || null) : null
+        kerntaken: kerntaken
       })
     });
 
@@ -692,7 +927,11 @@ function goStep4() {
   document.getElementById('context-chip-4').innerHTML =
     '<span>' + opleiding + '</span><span class="sep"> · </span><span>' + nl + '</span><span class="sep"> · </span><span>' + titel + '</span>';
 
-  // Bouw de vier diff-niveaus op basis van de gekozen opgave
+  // Reset NT2
+  document.getElementById('nt2-result').classList.remove('visible');
+  document.getElementById('nt2-result').innerHTML = '';
+  document.getElementById('btn-nt2').disabled = false;
+
   if (opgave) buildDiffContent(opgave, opleiding, nl);
 
   maxStep = Math.max(maxStep, 4);
@@ -700,10 +939,46 @@ function goStep4() {
   showDiffLevel(1);
 }
 
+// ═══════════════════════════════════════════
+// ── VERBETERING 1: DYNAMISCHE INVULTABEL ──
+// ═══════════════════════════════════════════
 function buildDiffContent(opgave, opleiding, niveau) {
   const ctx = opgave.contextbeschrijving || '';
   const vraag = opgave.vraag || '';
   const titel = opgave.titel || '';
+  const stappen = opgave.stappen || [];
+  const antwoord = opgave.antwoord || '';
+  const uitwerking = opgave.uitwerking || [];
+
+  // ── helper: docentblok HTML ──────────────────────────────────────────────
+  function docentBlok(id) {
+    const stappenHtml = uitwerking.length > 0
+      ? uitwerking.map((s, i) =>
+          `<div class="docent-uitwerking-stap">
+            <span class="docent-stap-num">Stap ${i+1}:</span>
+            <span class="docent-stap-tekst">${s}</span>
+          </div>`).join('')
+      : stappen.map((s, i) =>
+          `<div class="docent-uitwerking-stap">
+            <span class="docent-stap-num">Stap ${i+1}:</span>
+            <span class="docent-stap-tekst">${s.label || ''} &nbsp;<strong>${s.operator||''}</strong>&nbsp; ${s.invoer_omschrijving || ''} = … ${s.eenheid||''}</span>
+          </div>`).join('');
+
+    return `
+    <div class="docent-blok" id="docent-blok-${id}">
+      <div class="docent-blok-toggle" onclick="toggleDocentBlok('${id}')">
+        <div class="docent-blok-toggle-left">
+          <span class="docent-blok-toggle-icon">🔑</span>
+          Antwoord &amp; uitwerking (voor docent)
+        </div>
+        <span class="docent-blok-arrow">▼</span>
+      </div>
+      <div class="docent-blok-body">
+        ${antwoord ? `<div class="docent-antwoord">Antwoord: <strong>${antwoord}</strong></div>` : ''}
+        ${stappenHtml ? `<div style="font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Uitwerking</div>${stappenHtml}` : ''}
+      </div>
+    </div>`;
+  }
 
   // Niveau 1
   document.getElementById('diff-1').innerHTML = `
@@ -718,7 +993,8 @@ function buildDiffContent(opgave, opleiding, niveau) {
     </div>
     <div class="teacher-note">
       <strong>Didactische keuze:</strong> Op niveau 1 is de output altijd een docentinstructie. De student voert de situatie na in de werkelijkheid. Begrip ontstaat door doen — niet door lezen en uitrekenen.
-    </div>`;
+    </div>
+    ${docentBlok('n1')}`;
 
   // Niveau 2
   document.getElementById('diff-2').innerHTML = `
@@ -733,9 +1009,22 @@ function buildDiffContent(opgave, opleiding, niveau) {
     </div>
     <div class="teacher-note">
       <strong>Didactische keuze:</strong> De afbeelding verkleint de stap van werkelijkheid naar papier. Studenten die moeite hebben met lezen kunnen de situatie via de afbeelding begrijpen.
-    </div>`;
+    </div>
+    ${docentBlok('n2')}`;
 
-  // Niveau 3 — bouw een generieke invultabel
+  // Niveau 3 — dynamische invultabel
+  const tabelRijen = stappen.map((stap, i) => `
+    <tr>
+      <td><strong>Stap ${i + 1}</strong><br><span style="font-size:12px;color:var(--ink-soft)">${stap.label || ''}</span></td>
+      <td class="operator-cell">${stap.operator || '?'}</td>
+      <td class="invoer-cell">${stap.invoer_omschrijving || '_____ ' + (stap.operator || '') + ' _____'}</td>
+      <td class="uitkomst-cell"><input class="tabel-invoer" type="text" placeholder="……… ${stap.eenheid || ''}"></td>
+    </tr>`).join('');
+
+  const fallbackRijen = `
+    <tr><td><strong>Stap 1</strong></td><td class="operator-cell">×</td><td>_____ × _____</td><td><input class="tabel-invoer" type="text" placeholder="………"></td></tr>
+    <tr><td><strong>Stap 2</strong></td><td class="operator-cell">÷</td><td>_____ ÷ _____</td><td><input class="tabel-invoer" type="text" placeholder="………"></td></tr>`;
+
   document.getElementById('diff-3').innerHTML = `
     <div class="diff-level-badge">Niveau 3 — Werken met een schema (voorstellen abstract)</div>
     <div class="diff-box">
@@ -745,19 +1034,29 @@ function buildDiffContent(opgave, opleiding, niveau) {
       <p>Gebruik de tabel om je berekening stap voor stap te ordenen:</p>
       <br>
       <table class="diff-table">
-        <thead><tr><th>Stap</th><th>Berekening</th><th>Uitkomst</th></tr></thead>
+        <thead>
+          <tr>
+            <th style="width:32%">Rekenstap</th>
+            <th style="width:8%">+/−/×/÷</th>
+            <th style="width:36%">Berekening</th>
+            <th style="width:24%">Uitkomst</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr><td>Stap 1</td><td>_____ × _____ =</td><td>_____</td></tr>
-          <tr><td>Stap 2</td><td>_____ ÷ _____ =</td><td>_____</td></tr>
-          <tr><td>Antwoord</td><td colspan="2">_____________________</td></tr>
+          ${stappen.length > 0 ? tabelRijen : fallbackRijen}
+          <tr style="background:var(--teal-light)">
+            <td colspan="3" style="font-weight:600;color:var(--teal)">Antwoord</td>
+            <td><input class="tabel-invoer" type="text" placeholder="………" style="font-weight:600;border-bottom-color:var(--teal)"></td>
+          </tr>
         </tbody>
       </table>
       <br>
       <p><strong>${vraag}</strong></p>
     </div>
     <div class="teacher-note">
-      <strong>Didactische keuze:</strong> Het schema structureert het denkproces zonder de berekening voor te doen. Pas de tabel aan op de specifieke berekenstappen van deze opgave.
-    </div>`;
+      <strong>Didactische keuze:</strong> Het schema structureert het denkproces zonder de berekening voor te doen. ${stappen.length > 0 ? 'De rekenstappen zijn afgeleid uit de gegenereerde opgave.' : 'Pas de tabel aan op de specifieke berekenstappen van deze opgave.'}
+    </div>
+    ${docentBlok('n3')}`;
 
   // Niveau 4
   document.getElementById('diff-4').innerHTML = `
@@ -770,41 +1069,95 @@ function buildDiffContent(opgave, opleiding, niveau) {
     </div>
     <div class="teacher-note">
       <strong>Didactische keuze:</strong> Geen schema, geen afbeelding. De student structureert het rekenproces zelf. Vraag de student het antwoord ook terug te koppelen aan de situatie: "Klopt dit? Zou je dit zo doen in de praktijk?"
-    </div>`;
+    </div>
+    ${docentBlok('n4')}`;
 
-  // Niveau 5 — overzicht
+  // Niveau 5 — volledig overzicht
+  const stappenOvz = stappen.length > 0
+    ? `<table class="overview-table" style="margin-top:10px">
+        <thead><tr><th>Stap</th><th>Bewerking</th><th>Berekening</th><th>Eenheid</th></tr></thead>
+        <tbody>${stappen.map((s,i) => `<tr><td>Stap ${i+1}: ${s.label||''}</td><td style="text-align:center;font-weight:700;color:var(--teal)">${s.operator||''}</td><td style="font-style:italic;color:var(--ink-soft)">${s.invoer_omschrijving||''}</td><td>${s.eenheid||''}</td></tr>`).join('')}
+        <tr style="background:var(--teal-light)"><td colspan="3" style="font-weight:600;color:var(--teal)">Antwoord</td><td style="font-weight:600;color:var(--teal)">${antwoord || '…'}</td></tr>
+        </tbody></table>`
+    : '';
+
+  const uitwerkingOvz = uitwerking.length > 0
+    ? `<div style="margin-top:12px;padding:10px 14px;background:var(--teal-light);border-radius:6px;font-size:12px;">
+        <div style="font-weight:600;color:var(--teal);margin-bottom:6px;">Uitwerking</div>
+        ${uitwerking.map((s,i) => `<div style="margin-bottom:3px;color:var(--ink-mid)"><strong>Stap ${i+1}:</strong> ${s}</div>`).join('')}
+      </div>`
+    : '';
+
   document.getElementById('diff-5').innerHTML = `
     <p style="font-size:14px;color:var(--ink-soft);margin-bottom:18px;">Alle vier de niveaus voor dezelfde opgave — voor vergelijking of print.</p>
+
     <div class="overview-level">
       <div class="overview-header">
-        <div class="overview-num">1</div>
+        <div class="overview-num" style="background:#5BBFB0">1</div>
         <div><div class="overview-title">Doen in de praktijk</div><div class="overview-subtitle">Informeel handelen in werkelijkheidssituaties</div></div>
       </div>
-      <div class="overview-body"><p>Docentinstructie: laat de student de situatie nabootsen met echte materialen. Bespreek samen hoe ze te werk zijn gegaan.</p></div>
-      <div class="overview-note">Geen opgavetekst — de student handelt in de werkelijkheid.</div>
+      <div class="overview-body">
+        <p><strong>Docentinstructie:</strong> Zet materialen klaar die passen bij de volgende situatie. Laat de student de opgave uitvoeren alsof het een echte werksituatie is — zonder vooraf te rekenen op papier.</p>
+        <p style="margin-top:10px"><strong>Situatie voor de student (mondeling):</strong> ${ctx}</p>
+        <p style="margin-top:10px">Bespreek daarna samen: hoe zijn jullie te werk gegaan? Wat was lastig?</p>
+      </div>
+      <div class="overview-note">📌 Geen pen of papier. Begrip ontstaat door uitvoeren.</div>
     </div>
+
     <div class="overview-level">
       <div class="overview-header">
-        <div class="overview-num">2</div>
+        <div class="overview-num" style="background:#378ADD">2</div>
         <div><div class="overview-title">Werken met een afbeelding</div><div class="overview-subtitle">Voorstellen concreet</div></div>
       </div>
-      <div class="overview-body"><p>${ctx.substring(0,120)}… + afbeelding van de situatie. ${vraag}</p></div>
+      <div class="overview-body">
+        <p>${ctx}</p>
+        <p style="margin-top:10px;font-style:italic;color:var(--ink-soft)">[Voeg hier een foto of illustratie toe die de situatie herkenbaar maakt — bijv. een foto van de werkplek, het product of het meetinstrument.]</p>
+        <p style="margin-top:10px;font-weight:600">${vraag}</p>
+      </div>
     </div>
+
     <div class="overview-level">
       <div class="overview-header">
-        <div class="overview-num">3</div>
+        <div class="overview-num" style="background:#7F77DD">3</div>
         <div><div class="overview-title">Werken met een schema</div><div class="overview-subtitle">Voorstellen abstract</div></div>
       </div>
-      <div class="overview-body"><p>${ctx.substring(0,120)}… + invultabel met rekenstappen. ${vraag}</p></div>
+      <div class="overview-body">
+        <p>${ctx}</p>
+        <p style="margin-top:10px">Gebruik de tabel om je berekening stap voor stap te ordenen:</p>
+        ${stappenOvz}
+        <p style="margin-top:10px;font-weight:600">${vraag}</p>
+      </div>
     </div>
+
     <div class="overview-level">
       <div class="overview-header">
-        <div class="overview-num">4</div>
+        <div class="overview-num" style="background:#D85A30">4</div>
         <div><div class="overview-title">Zelfstandig berekenen</div><div class="overview-subtitle">Formeel handelen</div></div>
       </div>
-      <div class="overview-body"><p>${ctx} ${vraag} Laat je berekening zien en controleer je antwoord.</p></div>
-    </div>`;
+      <div class="overview-body">
+        <p>${ctx}</p>
+        <p style="margin-top:10px">${vraag} Laat je berekening zien en controleer of je antwoord realistisch is.</p>
+      </div>
+    </div>
 
+    <!-- Uitwerking in overzicht — altijd zichtbaar (is het overzichtsscherm voor de docent) -->
+    ${antwoord || uitwerking.length > 0 ? `
+    <div style="margin-top:18px;border:1.5px solid var(--teal-mid);border-radius:9px;overflow:hidden;">
+      <div style="padding:11px 18px;background:var(--teal-light);font-size:13px;font-weight:600;color:var(--teal);">
+        🔑 Antwoord &amp; uitwerking
+      </div>
+      <div style="padding:14px 18px;">
+        ${antwoord ? `<div style="font-size:15px;color:var(--ink);margin-bottom:10px;">Antwoord: <strong style="color:var(--teal)">${antwoord}</strong></div>` : ''}
+        ${uitwerkingOvz}
+      </div>
+    </div>` : ''}`;
+}
+
+// ═══════════════════════════════════════════
+// DOCENTBLOK TOGGLE
+// ═══════════════════════════════════════════
+function toggleDocentBlok(id) {
+  document.getElementById('docent-blok-' + id).classList.toggle('open');
 }
 
 // ═══════════════════════════════════════════
@@ -816,24 +1169,229 @@ function showDiffLevel(n) {
 }
 
 // ═══════════════════════════════════════════
-// HANDELINGSMODEL TOGGLE
+// ── VERBETERING 4: NT2 ALS ECHTE AI-AANROEP ──
 // ═══════════════════════════════════════════
-function toggleHM() {
-  document.getElementById('hm-uitleg').classList.toggle('open');
+async function genereerNt2() {
+  const opgave = gegenereerdeOpgaven[gekozenOpgaveIndex];
+  if (!opgave) return;
+
+  const btn = document.getElementById('btn-nt2');
+  const loading = document.getElementById('nt2-loading');
+  const result = document.getElementById('nt2-result');
+
+  btn.disabled = true;
+  loading.classList.add('visible');
+  result.classList.remove('visible');
+  result.innerHTML = '';
+
+  try {
+    const opleiding = document.getElementById('opleiding').value.trim();
+    const niveau = document.getElementById('niveau').value;
+    const nl = niveauLabelMap[niveau] || niveau;
+
+    const response = await fetch('/api/genereer-opgaven', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'nt2',
+        contextbeschrijving: opgave.contextbeschrijving,
+        vraag: opgave.vraag,
+        titel: opgave.titel,
+        opleidingsnaam: opleiding,
+        niveau: nl
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.nt2) {
+      throw new Error(data.error || 'Onbekende fout');
+    }
+
+    const nt2 = data.nt2;
+    const woordenHtml = (nt2.woordenlijst || []).map(w =>
+      `<div class="nt2-woord"><strong>${w.woord}</strong><span>${w.uitleg}</span></div>`
+    ).join('');
+
+    result.innerHTML = `
+      <div class="nt2-grid">
+        <div class="nt2-box">
+          <h4>Origineel</h4>
+          <p><strong>Context:</strong> ${opgave.contextbeschrijving}</p>
+          <p style="margin-top:8px"><strong>Vraag:</strong> ${opgave.vraag}</p>
+        </div>
+        <div class="nt2-box">
+          <h4>NT2-versie</h4>
+          <p><strong>Context:</strong> ${nt2.nt2_contextbeschrijving || ''}</p>
+          <p style="margin-top:8px"><strong>Vraag:</strong> ${nt2.nt2_vraag || ''}</p>
+        </div>
+      </div>
+      ${woordenHtml ? `
+      <div class="nt2-woordenlijst">
+        <h4>Woordenlijst voor de student</h4>
+        ${woordenHtml}
+      </div>` : ''}
+      ${nt2.toelichting_docent ? `
+      <div class="nt2-docent-note">
+        <strong>Toelichting voor de docent:</strong> ${nt2.toelichting_docent}
+      </div>` : ''}
+    `;
+
+    result.classList.add('visible');
+
+  } catch (err) {
+    result.innerHTML = `<div class="error-box visible"><p>Fout bij NT2-aanpassing: ${err.message}</p></div>`;
+    result.classList.add('visible');
+    btn.disabled = false;
+  } finally {
+    loading.classList.remove('visible');
+  }
 }
 
 // ═══════════════════════════════════════════
-// NT2 — binnenkort beschikbaar
+// ── VERBETERING 5: NIVEAU-SELECTIE VOOR EXPORT ──
+// ═══════════════════════════════════════════
+function toggleNiveauCheck(niveau, checked) {
+  if (checked) {
+    geselecteerdeNiveaus.add(niveau);
+  } else {
+    geselecteerdeNiveaus.delete(niveau);
+  }
+  document.getElementById('check-n' + niveau).classList.toggle('geselecteerd', checked);
+}
+
+function exporteerWord() {
+  const opgave = gegenereerdeOpgaven[gekozenOpgaveIndex];
+  if (!opgave) return;
+
+  const opleiding = document.getElementById('opleiding').value.trim();
+  const niveau = document.getElementById('niveau').value;
+  const nl = niveauLabelMap[niveau] || niveau;
+  const stappen = opgave.stappen || [];
+
+  const niveauTitels = {
+    1: 'Niveau 1 — Doen in de praktijk',
+    2: 'Niveau 2 — Werken met een afbeelding',
+    3: 'Niveau 3 — Werken met een schema',
+    4: 'Niveau 4 — Zelfstandig berekenen'
+  };
+
+  let htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; margin: 2cm; color: #1A1A2E; }
+  h1 { font-size: 16pt; color: #0D7B6B; margin-bottom: 4pt; }
+  h2 { font-size: 13pt; color: #0D7B6B; margin-top: 18pt; margin-bottom: 6pt; border-bottom: 1pt solid #5BBFB0; padding-bottom: 3pt; }
+  .meta { font-size: 9pt; color: #7A7A9A; margin-bottom: 16pt; }
+  .context-box { background: #F5F0E8; padding: 10pt; border-radius: 4pt; margin-bottom: 8pt; }
+  .vraag { font-weight: bold; font-size: 12pt; margin: 8pt 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin: 8pt 0; }
+  th { background: #EDE5D4; padding: 6pt 8pt; text-align: left; border: 0.5pt solid #ccc; }
+  td { padding: 6pt 8pt; border: 0.5pt solid #ccc; }
+  .note { background: #FDF0EB; border-left: 3pt solid #E8541E; padding: 8pt 10pt; font-size: 9pt; margin-top: 8pt; }
+  .niveau-label { display: inline-block; background: #E6F5F2; color: #0D7B6B; padding: 2pt 8pt; border-radius: 10pt; font-size: 9pt; font-weight: bold; margin-bottom: 8pt; }
+  @page { margin: 2cm; }
+</style>
+</head><body>
+<h1>RekenContext — ${opgave.titel || 'Opgave'}</h1>
+<div class="meta">Opleiding: ${opleiding} &nbsp;|&nbsp; Niveau: ${nl} &nbsp;|&nbsp; Domein: ${selectedDomain}</div>`;
+
+  if (geselecteerdeNiveaus.has(1)) {
+    htmlContent += `
+<h2>${niveauTitels[1]}</h2>
+<div class="niveau-label">Informeel handelen</div>
+<div class="context-box"><strong>Docentinstructie:</strong> Zet materialen klaar die passen bij deze situatie. Laat de student de opgave uitvoeren alsof het een echte werksituatie is — zonder vooraf te rekenen op papier. Bespreek daarna samen hoe ze te werk zijn gegaan.</div>
+<div class="context-box"><strong>Situatie voor de student (mondeling):</strong><br>${opgave.contextbeschrijving || ''}</div>
+<div class="note"><strong>Didactische keuze:</strong> Geen pen of papier. Begrip ontstaat door uitvoeren.</div>`;
+  }
+
+  if (geselecteerdeNiveaus.has(2)) {
+    htmlContent += `
+<h2>${niveauTitels[2]}</h2>
+<div class="niveau-label">Voorstellen concreet</div>
+<div class="context-box">${opgave.contextbeschrijving || ''}</div>
+<p><em>[Voeg hier een foto of afbeelding toe die de situatie herkenbaar maakt.]</em></p>
+<div class="vraag">${opgave.vraag || ''}</div>
+<div class="note"><strong>Didactische keuze:</strong> De afbeelding verkleint de stap van werkelijkheid naar papier.</div>`;
+  }
+
+  if (geselecteerdeNiveaus.has(3)) {
+    const tabelRijen = stappen.length > 0
+      ? stappen.map((s, i) => `<tr><td><strong>Stap ${i+1}:</strong> ${s.label||''}</td><td style="text-align:center;font-weight:bold">${s.operator||''}</td><td style="font-style:italic">${s.invoer_omschrijving||''}</td><td>………… ${s.eenheid||''}</td></tr>`).join('')
+      : `<tr><td>Stap 1</td><td style="text-align:center">×</td><td>_____ × _____</td><td>…………</td></tr>
+         <tr><td>Stap 2</td><td style="text-align:center">÷</td><td>_____ ÷ _____</td><td>…………</td></tr>`;
+
+    htmlContent += `
+<h2>${niveauTitels[3]}</h2>
+<div class="niveau-label">Voorstellen abstract</div>
+<div class="context-box">${opgave.contextbeschrijving || ''}</div>
+<p>Gebruik de tabel om je berekening stap voor stap te ordenen:</p>
+<table>
+  <thead><tr><th>Rekenstap</th><th>+/−/×/÷</th><th>Berekening</th><th>Uitkomst</th></tr></thead>
+  <tbody>
+    ${tabelRijen}
+    <tr style="background:#E6F5F2"><td colspan="3" style="font-weight:bold;color:#0D7B6B">Antwoord</td><td style="font-weight:bold;color:#0D7B6B">…………………</td></tr>
+  </tbody>
+</table>
+<div class="vraag">${opgave.vraag || ''}</div>
+<div class="note"><strong>Didactische keuze:</strong> Het schema structureert het denkproces zonder de berekening voor te doen.</div>`;
+  }
+
+  if (geselecteerdeNiveaus.has(4)) {
+    htmlContent += `
+<h2>${niveauTitels[4]}</h2>
+<div class="niveau-label">Formeel handelen</div>
+<div class="context-box">${opgave.contextbeschrijving || ''}</div>
+<div class="vraag">${opgave.vraag || ''} Laat je berekening zien en controleer of je antwoord realistisch is.</div>
+${opgave.antwoord ? `<p style="font-size:9pt;color:#7A7A9A"><strong>Verwacht antwoord:</strong> ${opgave.antwoord}</p>` : ''}
+<div class="note"><strong>Didactische keuze:</strong> Geen schema, geen afbeelding. De student structureert het rekenproces zelf.</div>`;
+  }
+
+  // Uitwerking sectie — altijd aan het einde van het Word-document
+  const uitwerking = opgave.uitwerking || [];
+  if (opgave.antwoord || uitwerking.length > 0) {
+    htmlContent += `<div style="page-break-before:always;"></div>
+<h2 style="color:#0D7B6B;border-bottom:1pt solid #5BBFB0;padding-bottom:3pt;margin-bottom:10pt;">Antwoord &amp; uitwerking (voor docent)</h2>`;
+    if (opgave.antwoord) {
+      htmlContent += `<p style="font-size:13pt;margin-bottom:10pt;">Antwoord: <strong style="color:#0D7B6B">${opgave.antwoord}</strong></p>`;
+    }
+    if (uitwerking.length > 0) {
+      htmlContent += `<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-top:8pt;">
+        <thead><tr><th style="background:#EDE5D4;padding:6pt 8pt;text-align:left;border:0.5pt solid #ccc;">Stap</th><th style="background:#EDE5D4;padding:6pt 8pt;text-align:left;border:0.5pt solid #ccc;">Uitwerking</th></tr></thead>
+        <tbody>${uitwerking.map((s,i) => `<tr><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B;white-space:nowrap;">Stap ${i+1}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;">${s}</td></tr>`).join('')}</tbody>
+      </table>`;
+    } else if (stappen.length > 0) {
+      htmlContent += `<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-top:8pt;">
+        <thead><tr><th style="background:#EDE5D4;padding:6pt 8pt;text-align:left;border:0.5pt solid #ccc;">Stap</th><th style="background:#EDE5D4;padding:6pt 8pt;border:0.5pt solid #ccc;">Bewerking</th><th style="background:#EDE5D4;padding:6pt 8pt;border:0.5pt solid #ccc;">Berekening</th><th style="background:#EDE5D4;padding:6pt 8pt;border:0.5pt solid #ccc;">Eenheid</th></tr></thead>
+        <tbody>${stappen.map((s,i) => `<tr><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">Stap ${i+1}: ${s.label||''}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;text-align:center;font-weight:bold">${s.operator||''}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-style:italic">${s.invoer_omschrijving||''}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc">${s.eenheid||''}</td></tr>`).join('')}
+        <tr style="background:#E6F5F2"><td colspan="3" style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">Antwoord</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">${opgave.antwoord||'…'}</td></tr>
+        </tbody></table>`;
+    }
+    htmlContent += `<p style="font-size:8pt;color:#7A7A9A;margin-top:12pt;font-style:italic;">Deze pagina is alleen bedoeld voor de docent en wordt apart bewaard van de leerlingversie.</p>`;
+    htmlContent += `</div>`;
+  }
+
+  htmlContent += `</body></html>`;
+
+  const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'RekenContext_' + (opgave.titel || 'opgave').replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_') + '.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 // ═══════════════════════════════════════════
-// EXPORTEREN
+// TEKST KOPIËREN
 // ═══════════════════════════════════════════
 function kopieerTekst() {
   const actief = document.querySelector('.diff-content.active');
   if (!actief) return;
   const tekst = actief.innerText.replace(/\n{3,}/g, '\n\n');
   navigator.clipboard.writeText(tekst).then(() => {
-    const knop = document.querySelector('.export-btn:not(.soon)');
+    const knop = document.querySelector('.export-btn:not([onclick="exporteerWord()"])');
+    if (!knop) return;
     const orig = knop.innerHTML;
     knop.innerHTML = '✓ Gekopieerd!';
     knop.style.color = 'var(--teal)';
@@ -847,15 +1405,25 @@ function kopieerTekst() {
 function startOpnieuw() {
   selectedDomain = ''; maxStep = 1;
   gegenereerdeOpgaven = []; gekozenOpgaveIndex = 0;
+  geselecteerdeNiveaus = new Set([1, 2, 3, 4]);
+  huidigCrebo = null;
   document.getElementById('opleiding').value = '';
   document.getElementById('niveau').value = '';
   document.getElementById('crebo').value = '';
   document.getElementById('crebo-confirmed').classList.remove('visible');
-  document.getElementById('crebo-naam-placeholder').style.display = 'flex';
   document.getElementById('crebo-unknown').style.display = 'none';
+  document.getElementById('naam-zoek-hint').textContent = '';
+  document.getElementById('kerntaken-bevestiging').style.display = 'none';
+  sluitDropdown();
   document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('btn-genereer').textContent = 'Genereer opgaven →';
   document.getElementById('error-3').classList.remove('visible');
+  document.getElementById('nt2-result').classList.remove('visible');
+  document.getElementById('nt2-result').innerHTML = '';
+  [1,2,3,4].forEach(n => {
+    const lbl = document.getElementById('check-n' + n);
+    if (lbl) { lbl.classList.add('geselecteerd'); lbl.querySelector('input').checked = true; }
+  });
   showStep(1);
 }
 </script>
