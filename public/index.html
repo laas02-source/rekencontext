@@ -92,7 +92,7 @@
   .docent-blok-toggle { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; cursor:pointer; background:var(--warm); user-select:none; transition:background 0.15s; }
   .docent-blok-toggle:hover { background:var(--warm-dark); }
   .docent-blok-toggle-left { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink-mid); }
-  .docent-blok-toggle-icon { font-size:14px; }
+  .docent-blok-toggle-icon { font-size:14px; color:var(--teal); display:flex; align-items:center; }
   .docent-blok-arrow { font-size:11px; color:var(--ink-soft); transition:transform 0.2s; }
   .docent-blok.open .docent-blok-arrow { transform:rotate(180deg); }
   .docent-blok-body { display:none; padding:16px; border-top:1px solid var(--border); background:var(--white); }
@@ -114,8 +114,8 @@
   .domain-card.selected { border-color:var(--teal); background:var(--teal-light); }
   .domain-check { position:absolute; top:13px; right:13px; width:18px; height:18px; border-radius:50%; background:var(--teal); color:white; font-size:10px; display:none; align-items:center; justify-content:center; }
   .domain-card.selected .domain-check { display:flex; }
-  .domain-icon { width:36px; height:36px; border-radius:8px; background:var(--warm-dark); display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:11px; transition:background 0.18s; }
-  .domain-card.selected .domain-icon { background:var(--teal); }
+  .domain-icon { width:36px; height:36px; border-radius:8px; background:var(--warm-dark); display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:11px; transition:background 0.18s; color:var(--teal); }
+  .domain-card.selected .domain-icon { background:var(--teal); color:white; }
   .domain-card h3 { font-size:13px; font-weight:600; color:var(--ink); margin-bottom:3px; line-height:1.3; }
   .domain-card p { font-size:12px; color:var(--ink-soft); line-height:1.4; }
 
@@ -174,7 +174,7 @@
   /* ── VERBETERING 3: HANDELINGSMODEL ALTIJD ZICHTBAAR ── */
   .hm-uitleg { background:var(--white); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:24px; box-shadow:var(--shadow); }
   .hm-header { display:flex; align-items:center; gap:10px; padding:15px 20px; border-bottom:1px solid var(--border); background:var(--warm); }
-  .hm-header-icon { width:28px; height:28px; border-radius:6px; background:var(--teal-light); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .hm-header-icon { width:28px; height:28px; border-radius:6px; background:var(--teal-light); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; color:var(--teal); }
   .hm-header-text { font-size:14px; font-weight:600; color:var(--ink); }
   .hm-header-sub { font-size:12px; color:var(--ink-soft); }
   .hm-niveaus { display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
@@ -387,31 +387,31 @@
     <div class="domain-grid">
       <div class="domain-card" onclick="selectDomain(this,'Grootheden en eenheden')">
         <div class="domain-check">✓</div>
-        <div class="domain-icon">📏</div>
+        <div class="domain-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 12l3-3m-3 3 3 3M21 12l-3-3m3 3-3 3M9 12v2M12 12v3M15 12v2"/></svg></div>
         <h3>Grootheden en eenheden</h3>
         <p>Meten, maten omrekenen, meetinstrumenten, formules</p>
       </div>
       <div class="domain-card" onclick="selectDomain(this,'Oriëntatie in de 2D/3D-wereld')">
         <div class="domain-check">✓</div>
-        <div class="domain-icon">📐</div>
+        <div class="domain-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
         <h3>Oriëntatie in de 2D/3D-wereld</h3>
         <p>Plattegronden, omtrek, oppervlakte, inhoud, ruimte</p>
       </div>
       <div class="domain-card" onclick="selectDomain(this,'Verhoudingen')">
         <div class="domain-check">✓</div>
-        <div class="domain-icon">⚖️</div>
+        <div class="domain-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M5 21h14"/><path d="M5 6l7-3 7 3"/><path d="M4 9l8 3 8-3"/></svg></div>
         <h3>Verhoudingen</h3>
         <p>Recepten schalen, per-eenheden, evenredigheid</p>
       </div>
       <div class="domain-card" onclick="selectDomain(this,'Procenten')">
         <div class="domain-check">✓</div>
-        <div class="domain-icon">💹</div>
+        <div class="domain-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
         <h3>Procenten</h3>
         <p>Kortingen, toeslagen, BTW, procentuele toe- en afname</p>
       </div>
       <div class="domain-card" onclick="selectDomain(this,'Omgaan met kwantitatieve informatie')">
         <div class="domain-check">✓</div>
-        <div class="domain-icon">📊</div>
+        <div class="domain-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
         <h3>Omgaan met kwantitatieve informatie</h3>
         <p>Tabellen, grafieken en schema's lezen en interpreteren</p>
       </div>
@@ -463,7 +463,7 @@
     <!-- ── VERBETERING 3: HANDELINGSMODEL ALTIJD ZICHTBAAR (geen toggle) ── -->
     <div class="hm-uitleg" id="hm-uitleg">
       <div class="hm-header">
-        <div class="hm-header-icon">🎓</div>
+        <div class="hm-header-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
         <div>
           <div class="hm-header-text">Het ERWD-handelingsmodel</div>
           <div class="hm-header-sub">Vier niveaus van informeel naar formeel handelen</div>
@@ -542,7 +542,7 @@
           <p>Een taalvereenvoudigde versie van de opgave voor studenten die Nederlands als tweede taal leren.</p>
         </div>
         <button class="btn btn-purple" id="btn-nt2" onclick="genereerNt2()" style="flex-shrink:0;">
-          🌐 Genereer NT2-versie
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Genereer NT2-versie
         </button>
       </div>
       <div class="nt2-loading" id="nt2-loading">
@@ -575,13 +575,13 @@
         </label>
       </div>
       <div class="export-grid">
-        <div class="export-btn word-btn" onclick="exporteerWord()">📄 Word-document downloaden</div>
+        <div class="export-btn word-btn" onclick="exporteerWord()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Word-document downloaden</div>
       </div>
     </div>
 
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="showStep(3)">← Terug naar opgaven</button>
-      <button class="btn btn-accent" onclick="bevestigOpnieuw()">＋ Nieuwe opgave maken</button>
+      <button class="btn btn-accent" onclick="bevestigOpnieuw()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nieuwe opgave maken</button>
     </div>
   </div>
 
@@ -1024,7 +1024,7 @@ function buildDiffContent(opgave, opleiding, niveau) {
     <div class="docent-blok" id="docent-blok-${id}">
       <div class="docent-blok-toggle" onclick="toggleDocentBlok('${id}')">
         <div class="docent-blok-toggle-left">
-          <span class="docent-blok-toggle-icon">🔑</span>
+          <span class="docent-blok-toggle-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></span>
           Antwoord &amp; uitwerking (voor docent)
         </div>
         <span class="docent-blok-arrow">▼</span>
@@ -1157,7 +1157,7 @@ function buildDiffContent(opgave, opleiding, niveau) {
         <p style="margin-top:10px"><strong>Situatie voor de student (mondeling):</strong> ${ctx}</p>
         <p style="margin-top:10px">Bespreek daarna samen: hoe zijn jullie te werk gegaan? Wat was lastig?</p>
       </div>
-      <div class="overview-note">📌 Geen pen of papier. Begrip ontstaat door uitvoeren.</div>
+      <div class="overview-note">→ Geen pen of papier. Begrip ontstaat door uitvoeren.</div>
     </div>
 
     <div class="overview-level">
@@ -1200,7 +1200,7 @@ function buildDiffContent(opgave, opleiding, niveau) {
     ${antwoord || uitwerking.length > 0 ? `
     <div style="margin-top:18px;border:1.5px solid var(--teal-mid);border-radius:9px;overflow:hidden;">
       <div style="padding:11px 18px;background:var(--teal-light);font-size:13px;font-weight:600;color:var(--teal);">
-        🔑 Antwoord &amp; uitwerking
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg> Antwoord &amp; uitwerking
       </div>
       <div style="padding:14px 18px;">
         ${antwoord ? `<div style="font-size:15px;color:var(--ink);margin-bottom:10px;">Antwoord: <strong style="color:var(--teal)">${antwoord}</strong></div>` : ''}
