@@ -625,7 +625,8 @@ async function goStep3() {
         opleidingsnaam: opleiding,
         niveau: nl,
         domein: selectedDomain,
-        sector: sector
+        sector: sector,
+        kerntaken: match ? (match.kerntaken || null) : null
       })
     });
 
