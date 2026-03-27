@@ -1,0 +1,20 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[dev]
+  port = 8888
+  targetPort = 3000
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
