@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RekenContext — contextrijke rekenopgaven voor het mbo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: #0D7B6B; --teal-light: #E6F5F2; --teal-mid: #5BBFB0;
+    --ink: #1A1A2E; --ink-mid: #3D3D5C; --ink-soft: #7A7A9A;
+    --warm: #F5F0E8; --warm-dark: #EDE5D4;
+    --accent: #E8541E; --accent-light: #FDF0EB;
+    --white: #FDFCFA; --red: #C0392B; --red-light: #FDECEA;
+    --border: rgba(26,26,46,0.12);
+    --shadow: 0 2px 16px rgba(26,26,46,0.08);
+    --r: 10px;
+  }
+  body { font-family:'DM Sans',sans-serif; background:var(--warm); color:var(--ink); min-height:100vh; font-size:15px; line-height:1.6; }
+
+  /* HEADER */
+  header { background:var(--ink); padding:0 40px; display:flex; align-items:center; justify-content:space-between; height:60px; position:sticky; top:0; z-index:100; }
+  .logo { font-family:'DM Serif Display',serif; color:var(--white); font-size:1.3rem; letter-spacing:-0.02em; }
+  .logo span { color:var(--teal-mid); }
+  .header-sub { font-size:12px; color:rgba(255,255,255,0.35); }
+
+  /* INTRO BANNER */
+  .intro-banner { background:var(--teal); padding:13px 40px; display:flex; align-items:center; gap:12px; }
+  .intro-banner p { color:rgba(255,255,255,0.92); font-size:14px; line-height:1.5; }
+  .intro-banner strong { color:white; }
+
+  /* PROGRESS */
+  .progress-bar { background:var(--white); border-bottom:1px solid var(--border); padding:0 40px; display:flex; overflow-x:auto; }
+  .step-tab { display:flex; align-items:center; gap:9px; padding:13px 18px; font-size:13px; font-weight:500; color:var(--ink-soft); cursor:pointer; border-bottom:2.5px solid transparent; white-space:nowrap; transition:all 0.2s; user-select:none; }
+  .step-tab:hover:not(.locked) { color:var(--teal); }
+  .step-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+  .step-tab.done { color:var(--ink-mid); }
+  .step-tab.locked { opacity:0.38; cursor:default; pointer-events:none; }
+  .step-num { width:22px; height:22px; border-radius:50%; background:var(--warm-dark); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; transition:all 0.2s; }
+  .step-tab.active .step-num { background:var(--teal); color:white; }
+  .step-tab.done .step-num { background:var(--teal); color:white; font-size:0; }
+  .step-tab.done .step-num::after { content:'✓'; font-size:11px; }
+
+  /* MAIN */
+  main { max-width:860px; margin:0 auto; padding:40px 24px 100px; }
+  .screen { display:none; animation:fadeUp 0.28s ease; }
+  .screen.active { display:block; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  .screen-header { margin-bottom:28px; }
+  .screen-header h1 { font-family:'DM Serif Display',serif; font-size:1.85rem; color:var(--ink); line-height:1.2; margin-bottom:8px; }
+  .screen-header p { color:var(--ink-soft); font-size:14px; max-width:540px; line-height:1.55; }
+
+  .card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:28px; box-shadow:var(--shadow); }
+
+  /* FORM */
+  .field-group { margin-bottom:20px; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  label { display:block; font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-mid); margin-bottom:7px; }
+  input[type="text"], select { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:7px; background:var(--white); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:15px; outline:none; transition:border-color 0.15s; }
+  input[type="text"]:focus, select:focus { border-color:var(--teal); }
+  input.error, select.error { border-color:var(--red); background:var(--red-light); }
+  select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7A9A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; appearance:none; }
+  .field-error { font-size:12px; color:var(--red); margin-top:5px; display:none; align-items:center; gap:5px; }
+  .field-error.visible { display:flex; }
+
+  /* CREBO LOOKUP */
+  .crebo-row { display:grid; grid-template-columns:180px 1fr; gap:12px; align-items:start; }
+  .crebo-confirmed { display:none; align-items:center; gap:8px; padding:11px 14px; background:var(--teal-light); border:1.5px solid var(--teal-mid); border-radius:7px; font-size:14px; color:var(--teal); font-weight:500; }
+  .crebo-confirmed.visible { display:flex; }
+  .crebo-confirmed .check { font-size:14px; }
+  .crebo-unknown { display:none; align-items:center; gap:8px; padding:9px 12px; background:var(--accent-light); border:1px solid rgba(232,84,30,0.3); border-radius:7px; font-size:12px; color:var(--accent); margin-top:6px; }
+  .crebo-unknown.visible { display:flex; }
+
+  /* DOMAIN GRID */
+  .domain-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin-bottom:24px; }
+  .domain-card { border:2px solid var(--border); border-radius:var(--r); padding:18px 20px; cursor:pointer; transition:all 0.18s; background:var(--white); position:relative; }
+  .domain-card:hover { border-color:var(--teal-mid); transform:translateY(-1px); box-shadow:var(--shadow); }
+  .domain-card.selected { border-color:var(--teal); background:var(--teal-light); }
+  .domain-check { position:absolute; top:13px; right:13px; width:18px; height:18px; border-radius:50%; background:var(--teal); color:white; font-size:10px; display:none; align-items:center; justify-content:center; }
+  .domain-card.selected .domain-check { display:flex; }
+  .domain-icon { width:36px; height:36px; border-radius:8px; background:var(--warm-dark); display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:11px; transition:background 0.18s; }
+  .domain-card.selected .domain-icon { background:var(--teal); }
+  .domain-card h3 { font-size:13px; font-weight:600; color:var(--ink); margin-bottom:3px; line-height:1.3; }
+  .domain-card p { font-size:12px; color:var(--ink-soft); line-height:1.4; }
+
+  /* BUTTONS */
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:11px 22px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; border:none; transition:all 0.15s; }
+  .btn-primary { background:var(--teal); color:white; }
+  .btn-primary:hover { background:#0A6358; transform:translateY(-1px); box-shadow:0 4px 14px rgba(13,123,107,0.28); }
+  .btn-primary:disabled { background:var(--warm-dark); color:var(--ink-soft); cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn-secondary { background:var(--white); color:var(--ink-mid); border:1.5px solid var(--border); }
+  .btn-secondary:hover { border-color:var(--teal-mid); color:var(--teal); }
+  .btn-accent { background:var(--accent); color:white; }
+  .btn-accent:hover { background:#C8411A; transform:translateY(-1px); }
+  .btn-row { display:flex; align-items:center; gap:12px; margin-top:28px; flex-wrap:wrap; }
+
+  /* LOADING */
+  .loading-box { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:52px; text-align:center; box-shadow:var(--shadow); }
+  .spinner { width:36px; height:36px; border:3px solid var(--teal-light); border-top-color:var(--teal); border-radius:50%; animation:spin 0.75s linear infinite; margin:0 auto 16px; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loading-label { color:var(--ink-soft); font-size:14px; line-height:1.6; }
+  .loading-label strong { color:var(--ink); }
+  .loading-hint { font-size:12px; color:var(--ink-soft); margin-top:8px; opacity:0.7; }
+
+  /* ERROR STATE */
+  .error-box { background:var(--red-light); border:1.5px solid rgba(192,57,43,0.3); border-radius:var(--r); padding:28px; text-align:center; display:none; }
+  .error-box.visible { display:block; }
+  .error-box p { color:var(--red); font-size:14px; margin-bottom:16px; }
+
+  /* CONTEXT CHIP */
+  .context-chip { display:inline-flex; align-items:center; gap:8px; padding:7px 14px; background:var(--white); border:1px solid var(--border); border-radius:6px; font-size:13px; color:var(--ink-mid); margin-bottom:22px; }
+  .context-chip span { color:var(--teal); font-weight:500; }
+  .context-chip .sep { color:var(--warm-dark); }
+
+  /* OPGAVE CARDS */
+  .opgave-list { display:flex; flex-direction:column; gap:13px; }
+  .opgave-card { background:var(--white); border:2px solid var(--border); border-radius:var(--r); padding:22px 24px; cursor:pointer; transition:all 0.18s; box-shadow:var(--shadow); }
+  .opgave-card:hover { border-color:var(--teal-mid); transform:translateY(-1px); }
+  .opgave-card.selected { border-color:var(--teal); background:var(--teal-light); }
+  .opgave-number { font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--teal); margin-bottom:7px; }
+  .opgave-card h3 { font-family:'DM Serif Display',serif; font-size:1.06rem; color:var(--ink); margin-bottom:8px; line-height:1.3; }
+  .opgave-card .opgave-context { font-size:14px; color:var(--ink-mid); line-height:1.6; margin-bottom:8px; }
+  .opgave-card .opgave-vraag { font-size:14px; color:var(--ink); font-weight:500; line-height:1.5; }
+  .opgave-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .tag { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; background:var(--warm-dark); color:var(--ink-mid); }
+  .tag.teal { background:var(--teal-light); color:var(--teal); }
+
+  /* HANDELINGSMODEL UITLEG */
+  .hm-uitleg { background:var(--white); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:24px; box-shadow:var(--shadow); }
+  .hm-toggle { display:flex; align-items:center; justify-content:space-between; padding:15px 20px; cursor:pointer; user-select:none; transition:background 0.15s; }
+  .hm-toggle:hover { background:var(--warm); }
+  .hm-toggle-left { display:flex; align-items:center; gap:10px; }
+  .hm-toggle-icon { width:28px; height:28px; border-radius:6px; background:var(--teal-light); display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .hm-toggle-text { font-size:14px; font-weight:500; color:var(--ink); }
+  .hm-toggle-sub { font-size:12px; color:var(--ink-soft); }
+  .hm-arrow { font-size:12px; color:var(--ink-soft); transition:transform 0.2s; }
+  .hm-uitleg.open .hm-arrow { transform:rotate(180deg); }
+  .hm-body { display:none; border-top:1px solid var(--border); }
+  .hm-uitleg.open .hm-body { display:block; }
+  .hm-niveaus { display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
+  .hm-niveau { padding:16px 18px; border-right:1px solid var(--border); }
+  .hm-niveau:last-child { border-right:none; }
+  .hm-niveau-num { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; margin-bottom:10px; }
+  .hm-niveau:nth-child(1) .hm-niveau-num { background:#5BBFB0; }
+  .hm-niveau:nth-child(2) .hm-niveau-num { background:#378ADD; }
+  .hm-niveau:nth-child(3) .hm-niveau-num { background:#7F77DD; }
+  .hm-niveau:nth-child(4) .hm-niveau-num { background:#D85A30; }
+  .hm-niveau h4 { font-size:12px; font-weight:600; color:var(--ink); margin-bottom:5px; }
+  .hm-niveau p { font-size:12px; color:var(--ink-soft); line-height:1.45; }
+  .hm-niveau .hm-voorbeeld { font-size:11px; color:var(--teal); margin-top:7px; font-style:italic; }
+  .hm-footer { padding:12px 18px; background:var(--warm); border-top:1px solid var(--border); font-size:12px; color:var(--ink-soft); }
+  .hm-footer strong { color:var(--ink-mid); }
+
+  /* DIFF TABS */
+  .diff-tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:22px; }
+  .diff-tab { padding:12px 8px; border-radius:8px; cursor:pointer; border:2px solid var(--border); background:var(--white); transition:all 0.18s; text-align:center; }
+  .diff-tab:hover { border-color:var(--teal-mid); }
+  .diff-tab.active { border-color:var(--teal); background:var(--teal-light); }
+  .diff-tab.overview { border-style:dashed; }
+  .diff-tab.overview.active { border-style:solid; }
+  .diff-tab-num { width:26px; height:26px; border-radius:50%; margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:var(--warm-dark); color:var(--ink-mid); transition:all 0.18s; }
+  .diff-tab.active .diff-tab-num { background:var(--teal); color:white; }
+  .diff-tab-label { font-size:11px; font-weight:600; color:var(--ink-mid); line-height:1.3; }
+  .diff-tab.active .diff-tab-label { color:var(--teal); }
+  .diff-tab-sub { font-size:10px; color:var(--ink-soft); margin-top:2px; font-style:italic; }
+
+  .diff-content { display:none; }
+  .diff-content.active { display:block; animation:fadeUp 0.22s ease; }
+
+  .diff-level-badge { display:inline-flex; align-items:center; gap:8px; padding:5px 13px; border-radius:20px; font-size:12px; font-weight:600; margin-bottom:15px; background:var(--teal-light); color:var(--teal); }
+  .diff-box { background:var(--warm); border-radius:8px; padding:20px; margin-bottom:13px; }
+  .diff-box h4 { font-size:11px; font-weight:600; color:var(--ink-soft); margin-bottom:9px; text-transform:uppercase; letter-spacing:0.06em; }
+  .diff-box p, .diff-box li { font-size:14px; color:var(--ink); line-height:1.65; }
+  .diff-box ul { padding-left:18px; }
+  .diff-box li { margin-bottom:6px; }
+  .teacher-note { background:var(--accent-light); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:12px 16px; font-size:13px; color:var(--ink-mid); line-height:1.55; margin-bottom:13px; }
+  .teacher-note strong { color:var(--accent); }
+  .diff-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:4px; }
+  .diff-table th { padding:9px 12px; text-align:left; background:var(--warm-dark); border:1px solid var(--border); font-weight:600; color:var(--ink-mid); }
+  .diff-table td { padding:9px 12px; border:1px solid var(--border); color:var(--ink); }
+
+  /* OVERVIEW */
+  .overview-level { border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:14px; background:var(--white); }
+  .overview-header { display:flex; align-items:center; gap:12px; padding:12px 18px; background:var(--warm-dark); border-bottom:1px solid var(--border); }
+  .overview-num { width:26px; height:26px; border-radius:50%; background:var(--teal); color:white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+  .overview-title { font-size:13px; font-weight:600; color:var(--ink); }
+  .overview-subtitle { font-size:11px; color:var(--ink-soft); font-style:italic; }
+  .overview-body { padding:14px 18px; }
+  .overview-body p, .overview-body li { font-size:13.5px; color:var(--ink-mid); line-height:1.6; }
+  .overview-body ul { padding-left:18px; }
+  .overview-body li { margin-bottom:4px; }
+  .overview-note { font-size:12px; color:var(--accent); padding:9px 18px 10px; border-top:1px solid var(--border); background:var(--accent-light); }
+
+  /* NT2 — sectie stijl (toggle en resultaat komen later) */
+  .nt2-section { margin-top:26px; border-top:1px solid var(--border); padding-top:22px; }
+  .nt2-section h3 { font-size:15px; font-weight:600; color:var(--ink); margin-bottom:4px; }
+  .nt2-section > p { font-size:13px; color:var(--ink-soft); margin-bottom:13px; }
+
+  /* EXPORT */
+  .export-section { margin-top:24px; border-top:1px solid var(--border); padding-top:22px; }
+  .export-section h3 { font-size:15px; font-weight:600; color:var(--ink); margin-bottom:13px; }
+  .export-grid { display:flex; flex-wrap:wrap; gap:9px; }
+  .export-btn { display:inline-flex; align-items:center; gap:8px; padding:9px 17px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--ink-mid); transition:all 0.15s; }
+  .export-btn:hover { border-color:var(--teal-mid); color:var(--teal); background:var(--teal-light); }
+  .export-btn.soon { opacity:0.4; cursor:default; }
+  .export-btn.soon:hover { border-color:var(--border); color:var(--ink-mid); background:var(--white); }
+  .soon-tag { font-size:10px; background:var(--warm-dark); padding:1px 6px; border-radius:4px; color:var(--ink-soft); }
+
+  /* RESPONSIVE */
+  @media(max-width:620px){
+    header{padding:0 16px}
+    main{padding:24px 14px 80px}
+    .intro-banner{padding:12px 16px}
+    .progress-bar{padding:0 12px}
+    .field-row{grid-template-columns:1fr}
+    .crebo-row{grid-template-columns:1fr}
+    .diff-tabs{grid-template-columns:repeat(3,1fr)}
+    .hm-niveaus{grid-template-columns:1fr 1fr}
+    .hm-niveau{border-right:none;border-bottom:1px solid var(--border)}
+    .nt2-comparison{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Reken<span>Context</span></div>
+  <div class="header-sub">voor rekendocenten in het mbo</div>
+</header>
+
+<div class="intro-banner">
+  <p><strong>Maak in vier stappen een contextrijke rekenopgave</strong> — passend bij jouw opleiding, mbo-niveau en rekendomein. Inclusief differentiatie op handelingsniveau.</p>
+</div>
+
+<div class="progress-bar">
+  <div class="step-tab active" id="tab-1"><div class="step-num">1</div> Opleiding &amp; niveau</div>
+  <div class="step-tab locked" id="tab-2"><div class="step-num">2</div> Rekendomein</div>
+  <div class="step-tab locked" id="tab-3"><div class="step-num">3</div> Opgaven</div>
+  <div class="step-tab locked" id="tab-4"><div class="step-num">4</div> Differentiatie &amp; export</div>
+</div>
+
+<main>
+
+  <!-- ════════════════════════ STAP 1 ════════════════════════ -->
+  <div class="screen active" id="screen-1">
+    <div class="screen-header">
+      <h1>Voor welke opleiding maak je een opgave?</h1>
+      <p>Vul het crebo-nummer in — de opleidingsnaam verschijnt automatisch. Of typ direct de naam van de opleiding.</p>
+    </div>
+    <div class="card">
+      <div class="field-group">
+        <label>Crebo-nummer <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--ink-soft)">(optioneel — voor nauwkeurigere opgaven)</span></label>
+        <div class="crebo-row">
+          <div>
+            <input type="text" id="crebo" placeholder="bijv. 25491" maxlength="6" oninput="lookupCrebo(this.value)" style="text-align:center;font-size:18px;font-weight:600;letter-spacing:0.05em;">
+          </div>
+          <div>
+            <div class="crebo-confirmed" id="crebo-confirmed">
+              <span class="check">✓</span>
+              <span id="crebo-naam-display">—</span>
+            </div>
+            <div id="crebo-naam-placeholder" style="display:flex;align-items:center;padding:11px 14px;background:var(--warm);border:1.5px dashed var(--border);border-radius:7px;font-size:13px;color:var(--ink-soft);">
+              Naam verschijnt hier na invoer crebo
+            </div>
+          </div>
+        </div>
+        <div class="crebo-unknown visible" id="crebo-unknown" style="display:none!important;">
+          ⚠ Crebo-nummer niet herkend. Vul hieronder de opleidingsnaam handmatig in.
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label for="opleiding">Naam van de opleiding</label>
+          <input type="text" id="opleiding" placeholder="bijv. Verzorgende IG">
+          <div class="field-error" id="err-opleiding">⚠ Vul de naam van de opleiding in om verder te gaan.</div>
+        </div>
+        <div class="field-group">
+          <label for="niveau">Mbo-niveau</label>
+          <select id="niveau">
+            <option value="">Kies niveau</option>
+            <option value="entree">Entree (niveau 1)</option>
+            <option value="niveau 2">Niveau 2</option>
+            <option value="niveau 3">Niveau 3</option>
+            <option value="niveau 4">Niveau 4</option>
+          </select>
+          <div class="field-error" id="err-niveau">⚠ Kies een mbo-niveau om verder te gaan.</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goStep2()">Kies rekendomein →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════ STAP 2 ════════════════════════ -->
+  <div class="screen" id="screen-2">
+    <div class="screen-header">
+      <h1>Kies een functioneel rekendomein</h1>
+      <p>Welk domein staat centraal in de opgave?</p>
+    </div>
+    <div class="domain-grid">
+      <div class="domain-card" onclick="selectDomain(this,'Grootheden en eenheden')">
+        <div class="domain-check">✓</div>
+        <div class="domain-icon">📏</div>
+        <h3>Grootheden en eenheden</h3>
+        <p>Meten, maten omrekenen, meetinstrumenten, formules</p>
+      </div>
+      <div class="domain-card" onclick="selectDomain(this,'Oriëntatie in de 2D/3D-wereld')">
+        <div class="domain-check">✓</div>
+        <div class="domain-icon">📐</div>
+        <h3>Oriëntatie in de 2D/3D-wereld</h3>
+        <p>Plattegronden, omtrek, oppervlakte, inhoud, ruimte</p>
+      </div>
+      <div class="domain-card" onclick="selectDomain(this,'Verhoudingen')">
+        <div class="domain-check">✓</div>
+        <div class="domain-icon">⚖️</div>
+        <h3>Verhoudingen</h3>
+        <p>Recepten schalen, per-eenheden, evenredigheid</p>
+      </div>
+      <div class="domain-card" onclick="selectDomain(this,'Procenten')">
+        <div class="domain-check">✓</div>
+        <div class="domain-icon">💹</div>
+        <h3>Procenten</h3>
+        <p>Kortingen, toeslagen, BTW, procentuele toe- en afname</p>
+      </div>
+      <div class="domain-card" onclick="selectDomain(this,'Omgaan met kwantitatieve informatie')">
+        <div class="domain-check">✓</div>
+        <div class="domain-icon">📊</div>
+        <h3>Omgaan met kwantitatieve informatie</h3>
+        <p>Tabellen, grafieken en schema's lezen en interpreteren</p>
+      </div>
+    </div>
+    <div class="field-error" id="err-domein" style="margin-bottom:12px;">⚠ Kies een rekendomein om verder te gaan.</div>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="btn btn-secondary" onclick="showStep(1)">← Terug</button>
+      <button class="btn btn-primary" id="btn-genereer" onclick="goStep3()">Genereer opgaven →</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════ STAP 3 ════════════════════════ -->
+  <div class="screen" id="screen-3">
+    <div class="screen-header">
+      <h1>Kies een opgave</h1>
+      <p>Selecteer de opgave die het beste past bij jouw les.</p>
+    </div>
+
+    <div id="loading-3" class="loading-box">
+      <div class="spinner"></div>
+      <div class="loading-label" id="loading-text">Opgaven worden gegenereerd…</div>
+      <div class="loading-hint">Dit duurt meestal 5–10 seconden.</div>
+    </div>
+
+    <div class="error-box" id="error-3">
+      <p id="error-3-msg">Er is iets misgegaan bij het genereren van de opgaven.</p>
+      <button class="btn btn-secondary" onclick="goStep3()">Probeer opnieuw</button>
+    </div>
+
+    <div id="opgaven-list" style="display:none;">
+      <div id="context-chip-3" class="context-chip"></div>
+      <div class="opgave-list" id="opgaven-container"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="showStep(2)">← Terug</button>
+        <button class="btn btn-primary" onclick="goStep4()">Bekijk differentiatie →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════ STAP 4 ════════════════════════ -->
+  <div class="screen" id="screen-4">
+    <div class="screen-header">
+      <h1>Differentiatie &amp; export</h1>
+      <p>Bekijk de opgave op vier handelingsniveaus. Gebruik "Alle niveaus" om te vergelijken of te printen.</p>
+    </div>
+
+    <div id="context-chip-4" class="context-chip"></div>
+
+    <!-- HANDELINGSMODEL UITLEG (inklapbaar) -->
+    <div class="hm-uitleg" id="hm-uitleg">
+      <div class="hm-toggle" onclick="toggleHM()">
+        <div class="hm-toggle-left">
+          <div class="hm-toggle-icon">🎓</div>
+          <div>
+            <div class="hm-toggle-text">Wat is het handelingsmodel?</div>
+            <div class="hm-toggle-sub">Klik om de vier niveaus te bekijken</div>
+          </div>
+        </div>
+        <div class="hm-arrow">▼</div>
+      </div>
+      <div class="hm-body">
+        <div class="hm-niveaus">
+          <div class="hm-niveau">
+            <div class="hm-niveau-num">1</div>
+            <h4>Doen in de praktijk</h4>
+            <p>De student handelt in een echte situatie — meten, verdelen, uitvoeren. Geen papier, geen sommen. Begrip ontstaat door doen.</p>
+            <div class="hm-voorbeeld">Bijv. ingrediënten daadwerkelijk afwegen</div>
+          </div>
+          <div class="hm-niveau">
+            <div class="hm-niveau-num">2</div>
+            <h4>Werken met een afbeelding</h4>
+            <p>De student werkt met een foto of tekening van de situatie. De werkelijkheid is zichtbaar, maar de student voert de handeling op papier uit.</p>
+            <div class="hm-voorbeeld">Bijv. foto van een etiket en weegschaal</div>
+          </div>
+          <div class="hm-niveau">
+            <div class="hm-niveau-num">3</div>
+            <h4>Werken met een schema</h4>
+            <p>De student gebruikt een denkmodel: een invultabel, getallenlijn of verhoudingsschema. Geen echte afbeelding meer — wel structuur.</p>
+            <div class="hm-voorbeeld">Bijv. invultabel met drie rekenstappen</div>
+          </div>
+          <div class="hm-niveau">
+            <div class="hm-niveau-num">4</div>
+            <h4>Zelfstandig berekenen</h4>
+            <p>De student werkt met tekst en getallen, zonder visuele steun. Structureert het rekenproces zelf en controleert zijn antwoord.</p>
+            <div class="hm-voorbeeld">Bijv. opgave in lopende tekst, geen hulpstructuur</div>
+          </div>
+        </div>
+        <div class="hm-footer"><strong>Didactisch principe:</strong> Studenten die vastlopen op niveau 4 (kale sommen) hebben baat bij terugschakelen naar een lager niveau — niet bij meer oefening op hetzelfde niveau.</div>
+      </div>
+    </div>
+
+    <!-- DIFF TABS -->
+    <div class="diff-tabs">
+      <div class="diff-tab active" onclick="showDiffLevel(1)">
+        <div class="diff-tab-num">1</div>
+        <div class="diff-tab-label">Doen in de praktijk</div>
+        <div class="diff-tab-sub">informeel handelen</div>
+      </div>
+      <div class="diff-tab" onclick="showDiffLevel(2)">
+        <div class="diff-tab-num">2</div>
+        <div class="diff-tab-label">Werken met afbeelding</div>
+        <div class="diff-tab-sub">voorstellen concreet</div>
+      </div>
+      <div class="diff-tab" onclick="showDiffLevel(3)">
+        <div class="diff-tab-num">3</div>
+        <div class="diff-tab-label">Werken met schema</div>
+        <div class="diff-tab-sub">voorstellen abstract</div>
+      </div>
+      <div class="diff-tab" onclick="showDiffLevel(4)">
+        <div class="diff-tab-num">4</div>
+        <div class="diff-tab-label">Zelfstandig berekenen</div>
+        <div class="diff-tab-sub">formeel handelen</div>
+      </div>
+      <div class="diff-tab overview" onclick="showDiffLevel(5)">
+        <div class="diff-tab-num">☰</div>
+        <div class="diff-tab-label">Alle niveaus</div>
+        <div class="diff-tab-sub">overzicht &amp; print</div>
+      </div>
+    </div>
+
+    <!-- DYNAMISCHE DIFF CONTENT (wordt gevuld door JS) -->
+    <div class="diff-content active" id="diff-1"></div>
+    <div class="diff-content" id="diff-2"></div>
+    <div class="diff-content" id="diff-3"></div>
+    <div class="diff-content" id="diff-4"></div>
+    <div class="diff-content" id="diff-5"></div>
+
+    <!-- NT2 -->
+    <div class="nt2-section">
+      <h3>NT2-aanpassing</h3>
+      <p>Een vereenvoudigde versie van de opgave voor studenten die Nederlands als tweede taal leren — <em>binnenkort beschikbaar</em>.</p>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="export-section">
+      <h3>Exporteren</h3>
+      <div class="export-grid">
+        <div class="export-btn soon">📄 Word-document <span class="soon-tag">binnenkort</span></div>
+        <div class="export-btn soon">🖨 Leskaart printen <span class="soon-tag">binnenkort</span></div>
+        <div class="export-btn" onclick="kopieerTekst()">📋 Tekst kopiëren</div>
+        <div class="export-btn soon">👥 Teamslide <span class="soon-tag">binnenkort</span></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="showStep(3)">← Terug naar opgaven</button>
+      <button class="btn btn-accent" onclick="startOpnieuw()">＋ Nieuwe opgave maken</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════
+// CREBO DATABASE (geladen uit JSON)
+// ═══════════════════════════════════════════
+let creboData = [];
+fetch('/data/crebo.json')
+  .then(r => r.json())
+  .then(d => { creboData = d; })
+  .catch(() => console.warn('Crebo data niet geladen'));
+
+function lookupCrebo(val) {
+  const v = val.trim();
+  const confirmed = document.getElementById('crebo-confirmed');
+  const placeholder = document.getElementById('crebo-naam-placeholder');
+  const unknown = document.getElementById('crebo-unknown');
+  const naamInput = document.getElementById('opleiding');
+  const niveauSelect = document.getElementById('niveau');
+
+  confirmed.classList.remove('visible');
+  unknown.style.display = 'none';
+
+  if (v.length < 4) {
+    placeholder.style.display = 'flex';
+    return;
+  }
+
+  const match = creboData.find(c => c.crebo === v);
+  if (match) {
+    placeholder.style.display = 'none';
+    document.getElementById('crebo-naam-display').textContent =
+      match.naam + (match.uitstroom ? ' — ' + match.uitstroom : '') + ' · ' + match.sector;
+    confirmed.classList.add('visible');
+    // Auto-fill naam en niveau
+    naamInput.value = match.naam + (match.uitstroom ? ' — ' + match.uitstroom : '');
+    const niveauMap = { 1: 'entree', 2: 'niveau 2', 3: 'niveau 3', 4: 'niveau 4' };
+    niveauSelect.value = niveauMap[match.niveau] || '';
+    // Clear errors
+    document.getElementById('err-opleiding').classList.remove('visible');
+    document.getElementById('err-niveau').classList.remove('visible');
+    naamInput.classList.remove('error');
+    niveauSelect.classList.remove('error');
+  } else if (v.length >= 5) {
+    placeholder.style.display = 'none';
+    unknown.style.display = 'flex';
+  } else {
+    placeholder.style.display = 'flex';
+  }
+}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let selectedDomain = '';
+let maxStep = 1;
+let gegenereerdeOpgaven = [];
+let gekozenOpgaveIndex = 0;
+
+const niveauLabelMap = { 'entree': 'Entree', 'niveau 2': 'Niveau 2', 'niveau 3': 'Niveau 3', 'niveau 4': 'Niveau 4' };
+
+// ═══════════════════════════════════════════
+// NAVIGATIE
+// ═══════════════════════════════════════════
+function showStep(n) {
+  if (n > maxStep) return;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + n).classList.add('active');
+  for (let i = 1; i <= 4; i++) {
+    const tab = document.getElementById('tab-' + i);
+    tab.classList.remove('active', 'done', 'locked');
+    if (i < n) tab.classList.add('done');
+    else if (i === n) tab.classList.add('active');
+    else if (i > maxStep) tab.classList.add('locked');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goStep2() {
+  const opleiding = document.getElementById('opleiding').value.trim();
+  const niveau = document.getElementById('niveau').value;
+  let ok = true;
+  const errO = document.getElementById('err-opleiding');
+  const errN = document.getElementById('err-niveau');
+  const inpO = document.getElementById('opleiding');
+  const inpN = document.getElementById('niveau');
+  errO.classList.remove('visible'); inpO.classList.remove('error');
+  errN.classList.remove('visible'); inpN.classList.remove('error');
+  if (!opleiding) { errO.classList.add('visible'); inpO.classList.add('error'); ok = false; }
+  if (!niveau) { errN.classList.add('visible'); inpN.classList.add('error'); ok = false; }
+  if (!ok) return;
+  maxStep = Math.max(maxStep, 2);
+  updateGenereerKnop();
+  showStep(2);
+}
+
+function selectDomain(el, domain) {
+  document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedDomain = domain;
+  document.getElementById('err-domein').classList.remove('visible');
+  updateGenereerKnop();
+}
+
+function updateGenereerKnop() {
+  const opleiding = document.getElementById('opleiding').value.trim();
+  const niveau = document.getElementById('niveau').value;
+  const nl = niveauLabelMap[niveau] || '';
+  const knop = document.getElementById('btn-genereer');
+  if (opleiding && nl) {
+    knop.textContent = 'Genereer opgaven voor ' + opleiding + ', ' + nl + ' →';
+  } else {
+    knop.textContent = 'Genereer opgaven →';
+  }
+}
+
+async function goStep3() {
+  if (!selectedDomain) {
+    document.getElementById('err-domein').classList.add('visible');
+    return;
+  }
+  const opleiding = document.getElementById('opleiding').value.trim();
+  const niveau = document.getElementById('niveau').value;
+  const nl = niveauLabelMap[niveau] || niveau;
+  const crebo = document.getElementById('crebo').value.trim();
+  const match = creboData.find(c => c.crebo === crebo);
+  const sector = match ? match.sector : '';
+
+  document.getElementById('loading-text').innerHTML =
+    'Opgaven genereren voor <strong>' + opleiding + ', ' + nl + ' — ' + selectedDomain + '</strong>';
+  document.getElementById('loading-3').style.display = 'block';
+  document.getElementById('opgaven-list').style.display = 'none';
+  document.getElementById('error-3').classList.remove('visible');
+
+  maxStep = Math.max(maxStep, 3);
+  showStep(3);
+
+  try {
+    const response = await fetch('/.netlify/functions/genereer-opgaven', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        crebo: crebo || null,
+        opleidingsnaam: opleiding,
+        niveau: nl,
+        domein: selectedDomain,
+        sector: sector
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.opgaven) {
+      throw new Error(data.error || 'Onbekende fout');
+    }
+
+    gegenereerdeOpgaven = data.opgaven;
+    gekozenOpgaveIndex = 0;
+    renderOpgaven(data.opgaven, opleiding, nl);
+
+  } catch (err) {
+    document.getElementById('loading-3').style.display = 'none';
+    document.getElementById('error-3-msg').textContent = 'Fout: ' + (err.message || 'Kon geen verbinding maken met de AI-service.');
+    document.getElementById('error-3').classList.add('visible');
+  }
+}
+
+function renderOpgaven(opgaven, opleiding, niveauLabel) {
+  document.getElementById('loading-3').style.display = 'none';
+  document.getElementById('opgaven-list').style.display = 'block';
+  document.getElementById('context-chip-3').innerHTML =
+    '<span>' + opleiding + '</span><span class="sep"> · </span><span>' + niveauLabel + '</span><span class="sep"> · </span><span>' + selectedDomain + '</span>';
+
+  const container = document.getElementById('opgaven-container');
+  container.innerHTML = '';
+
+  opgaven.forEach((opgave, i) => {
+    const card = document.createElement('div');
+    card.className = 'opgave-card' + (i === 0 ? ' selected' : '');
+    card.onclick = () => selectOpgave(card, i);
+
+    const tags = (opgave.tags || []).map(t =>
+      '<span class="tag' + (t === selectedDomain ? ' teal' : '') + '">' + t + '</span>'
+    ).join('');
+
+    card.innerHTML = `
+      <div class="opgave-number">Opgave ${i + 1}</div>
+      <h3>${opgave.titel || 'Opgave ' + (i+1)}</h3>
+      <p class="opgave-context">${opgave.contextbeschrijving || ''}</p>
+      <p class="opgave-vraag">${opgave.vraag || ''}</p>
+      <div class="opgave-tags">${tags}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function selectOpgave(el, index) {
+  document.querySelectorAll('.opgave-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  gekozenOpgaveIndex = index;
+}
+
+function goStep4() {
+  const opleiding = document.getElementById('opleiding').value.trim();
+  const niveau = document.getElementById('niveau').value;
+  const nl = niveauLabelMap[niveau] || niveau;
+  const opgave = gegenereerdeOpgaven[gekozenOpgaveIndex];
+  const titel = opgave ? (opgave.titel || 'Opgave ' + (gekozenOpgaveIndex + 1)) : 'Geselecteerde opgave';
+
+  document.getElementById('context-chip-4').innerHTML =
+    '<span>' + opleiding + '</span><span class="sep"> · </span><span>' + nl + '</span><span class="sep"> · </span><span>' + titel + '</span>';
+
+  // Bouw de vier diff-niveaus op basis van de gekozen opgave
+  if (opgave) buildDiffContent(opgave, opleiding, nl);
+
+  maxStep = Math.max(maxStep, 4);
+  showStep(4);
+  showDiffLevel(1);
+}
+
+function buildDiffContent(opgave, opleiding, niveau) {
+  const ctx = opgave.contextbeschrijving || '';
+  const vraag = opgave.vraag || '';
+  const titel = opgave.titel || '';
+
+  // Niveau 1
+  document.getElementById('diff-1').innerHTML = `
+    <div class="diff-level-badge">Niveau 1 — Doen in de praktijk (informeel handelen)</div>
+    <div class="diff-box">
+      <h4>Docentinstructie</h4>
+      <p>Zet materialen klaar die passen bij deze situatie. Laat de student de opgave uitvoeren <em>alsof het een echte werksituatie is</em> — zonder vooraf te rekenen op papier. Bespreek daarna samen hoe ze te werk zijn gegaan.</p>
+    </div>
+    <div class="diff-box">
+      <h4>Situatie (voor de student — mondeling of op kaartje)</h4>
+      <p>${ctx}</p>
+    </div>
+    <div class="teacher-note">
+      <strong>Didactische keuze:</strong> Op niveau 1 is de output altijd een docentinstructie. De student voert de situatie na in de werkelijkheid. Begrip ontstaat door doen — niet door lezen en uitrekenen.
+    </div>`;
+
+  // Niveau 2
+  document.getElementById('diff-2').innerHTML = `
+    <div class="diff-level-badge">Niveau 2 — Werken met een afbeelding (voorstellen concreet)</div>
+    <div class="diff-box">
+      <h4>Opgave</h4>
+      <p>${ctx}</p>
+      <br>
+      <p><em>[Voeg hier een foto of afbeelding toe die de situatie herkenbaar maakt — bijv. een foto van de werkplek, een product of een meetinstrument.]</em></p>
+      <br>
+      <p><strong>${vraag}</strong></p>
+    </div>
+    <div class="teacher-note">
+      <strong>Didactische keuze:</strong> De afbeelding verkleint de stap van werkelijkheid naar papier. Studenten die moeite hebben met lezen kunnen de situatie via de afbeelding begrijpen.
+    </div>`;
+
+  // Niveau 3 — bouw een generieke invultabel
+  document.getElementById('diff-3').innerHTML = `
+    <div class="diff-level-badge">Niveau 3 — Werken met een schema (voorstellen abstract)</div>
+    <div class="diff-box">
+      <h4>Opgave</h4>
+      <p>${ctx}</p>
+      <br>
+      <p>Gebruik de tabel om je berekening stap voor stap te ordenen:</p>
+      <br>
+      <table class="diff-table">
+        <thead><tr><th>Stap</th><th>Berekening</th><th>Uitkomst</th></tr></thead>
+        <tbody>
+          <tr><td>Stap 1</td><td>_____ × _____ =</td><td>_____</td></tr>
+          <tr><td>Stap 2</td><td>_____ ÷ _____ =</td><td>_____</td></tr>
+          <tr><td>Antwoord</td><td colspan="2">_____________________</td></tr>
+        </tbody>
+      </table>
+      <br>
+      <p><strong>${vraag}</strong></p>
+    </div>
+    <div class="teacher-note">
+      <strong>Didactische keuze:</strong> Het schema structureert het denkproces zonder de berekening voor te doen. Pas de tabel aan op de specifieke berekenstappen van deze opgave.
+    </div>`;
+
+  // Niveau 4
+  document.getElementById('diff-4').innerHTML = `
+    <div class="diff-level-badge">Niveau 4 — Zelfstandig berekenen (formeel handelen)</div>
+    <div class="diff-box">
+      <h4>Opgave</h4>
+      <p>${ctx}</p>
+      <br>
+      <p>${vraag} Laat je berekening zien en controleer of je antwoord realistisch is.</p>
+    </div>
+    <div class="teacher-note">
+      <strong>Didactische keuze:</strong> Geen schema, geen afbeelding. De student structureert het rekenproces zelf. Vraag de student het antwoord ook terug te koppelen aan de situatie: "Klopt dit? Zou je dit zo doen in de praktijk?"
+    </div>`;
+
+  // Niveau 5 — overzicht
+  document.getElementById('diff-5').innerHTML = `
+    <p style="font-size:14px;color:var(--ink-soft);margin-bottom:18px;">Alle vier de niveaus voor dezelfde opgave — voor vergelijking of print.</p>
+    <div class="overview-level">
+      <div class="overview-header">
+        <div class="overview-num">1</div>
+        <div><div class="overview-title">Doen in de praktijk</div><div class="overview-subtitle">Informeel handelen in werkelijkheidssituaties</div></div>
+      </div>
+      <div class="overview-body"><p>Docentinstructie: laat de student de situatie nabootsen met echte materialen. Bespreek samen hoe ze te werk zijn gegaan.</p></div>
+      <div class="overview-note">Geen opgavetekst — de student handelt in de werkelijkheid.</div>
+    </div>
+    <div class="overview-level">
+      <div class="overview-header">
+        <div class="overview-num">2</div>
+        <div><div class="overview-title">Werken met een afbeelding</div><div class="overview-subtitle">Voorstellen concreet</div></div>
+      </div>
+      <div class="overview-body"><p>${ctx.substring(0,120)}… + afbeelding van de situatie. ${vraag}</p></div>
+    </div>
+    <div class="overview-level">
+      <div class="overview-header">
+        <div class="overview-num">3</div>
+        <div><div class="overview-title">Werken met een schema</div><div class="overview-subtitle">Voorstellen abstract</div></div>
+      </div>
+      <div class="overview-body"><p>${ctx.substring(0,120)}… + invultabel met rekenstappen. ${vraag}</p></div>
+    </div>
+    <div class="overview-level">
+      <div class="overview-header">
+        <div class="overview-num">4</div>
+        <div><div class="overview-title">Zelfstandig berekenen</div><div class="overview-subtitle">Formeel handelen</div></div>
+      </div>
+      <div class="overview-body"><p>${ctx} ${vraag} Laat je berekening zien en controleer je antwoord.</p></div>
+    </div>`;
+
+}
+
+// ═══════════════════════════════════════════
+// DIFF TABS
+// ═══════════════════════════════════════════
+function showDiffLevel(n) {
+  document.querySelectorAll('.diff-tab').forEach((t,i) => t.classList.toggle('active', i+1===n));
+  document.querySelectorAll('.diff-content').forEach((c,i) => c.classList.toggle('active', i+1===n));
+}
+
+// ═══════════════════════════════════════════
+// HANDELINGSMODEL TOGGLE
+// ═══════════════════════════════════════════
+function toggleHM() {
+  document.getElementById('hm-uitleg').classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// NT2 — binnenkort beschikbaar
+
+// ═══════════════════════════════════════════
+// EXPORTEREN
+// ═══════════════════════════════════════════
+function kopieerTekst() {
+  const actief = document.querySelector('.diff-content.active');
+  if (!actief) return;
+  const tekst = actief.innerText.replace(/\n{3,}/g, '\n\n');
+  navigator.clipboard.writeText(tekst).then(() => {
+    const knop = document.querySelector('.export-btn:not(.soon)');
+    const orig = knop.innerHTML;
+    knop.innerHTML = '✓ Gekopieerd!';
+    knop.style.color = 'var(--teal)';
+    setTimeout(() => { knop.innerHTML = orig; knop.style.color = ''; }, 2000);
+  });
+}
+
+// ═══════════════════════════════════════════
+// OPNIEUW
+// ═══════════════════════════════════════════
+function startOpnieuw() {
+  selectedDomain = ''; maxStep = 1;
+  gegenereerdeOpgaven = []; gekozenOpgaveIndex = 0;
+  document.getElementById('opleiding').value = '';
+  document.getElementById('niveau').value = '';
+  document.getElementById('crebo').value = '';
+  document.getElementById('crebo-confirmed').classList.remove('visible');
+  document.getElementById('crebo-naam-placeholder').style.display = 'flex';
+  document.getElementById('crebo-unknown').style.display = 'none';
+  document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-genereer').textContent = 'Genereer opgaven →';
+  document.getElementById('error-3').classList.remove('visible');
+  showStep(1);
+}
+</script>
+</body>
+</html>
