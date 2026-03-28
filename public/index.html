@@ -610,8 +610,11 @@ fetch('/data/crebo-slim.json')
 async function laadKerntaken() {
   if (kerntakenData !== null) return;
   try {
-    const r = await fetch('/data/crebo-kerntaken.json');
-    kerntakenData = await r.json();
+    const chunks = Array.from({length: 10}, (_, i) =>
+      fetch(`/data/crebo-kerntaken-${String(i+1).padStart(2,'0')}.json`).then(r => r.json())
+    );
+    const results = await Promise.all(chunks);
+    kerntakenData = Object.assign({}, ...results);
   } catch {
     kerntakenData = {};
     console.warn('Kerntaken data niet geladen');
@@ -1274,7 +1277,6 @@ async function genereerNt2() {
     }
 
     const nt2 = data.nt2;
-    gegenereerdeOpgaven[gekozenOpgaveIndex].nt2 = nt2;
     const woordenHtml = (nt2.woordenlijst || []).map(w =>
       `<div class="nt2-woord"><strong>${w.woord}</strong><span>${w.uitleg}</span></div>`
     ).join('');
@@ -1410,39 +1412,6 @@ function exporteerWord() {
 <div class="vraag">${opgave.vraag || ''} Laat je berekening zien en controleer of je antwoord realistisch is.</div>
 ${opgave.antwoord ? `<p style="font-size:9pt;color:#7A7A9A"><strong>Verwacht antwoord:</strong> ${opgave.antwoord}</p>` : ''}
 <div class="note"><strong>Didactische keuze:</strong> Geen schema, geen afbeelding. De student structureert het rekenproces zelf.</div>`;
-  }
-
-  // NT2-sectie — alleen als er een NT2-versie is gegenereerd
-  const nt2 = opgave.nt2;
-  if (nt2) {
-    const woordenRijen = (nt2.woordenlijst || []).map(w =>
-      `<tr>
-        <td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#7F77DD;width:30%">${w.woord}</td>
-        <td style="padding:6pt 8pt;border:0.5pt solid #ccc;">${w.uitleg}</td>
-      </tr>`
-    ).join('');
-
-    htmlContent += `<div style="page-break-before:always;"></div>
-<h2 style="color:#7F77DD;border-bottom:1pt solid #7F77DD;padding-bottom:3pt;margin-bottom:10pt;">NT2-versie (voor student met Nederlands als tweede taal)</h2>
-<p style="font-size:9pt;color:#7A7A9A;margin-bottom:12pt;font-style:italic;">Deze versie heeft dezelfde rekeninhoud als de oorspronkelijke opgave. Alleen de taal is toegankelijker gemaakt.</p>
-<h3 style="font-size:11pt;color:#3D3D5C;margin-bottom:5pt;">Situatie</h3>
-<p style="font-size:11pt;margin-bottom:12pt;line-height:1.6;">${nt2.nt2_contextbeschrijving || ''}</p>
-<h3 style="font-size:11pt;color:#3D3D5C;margin-bottom:5pt;">Vraag</h3>
-<p style="font-size:11pt;margin-bottom:14pt;font-weight:bold;line-height:1.6;">${nt2.nt2_vraag || ''}</p>
-${woordenRijen ? `
-<h3 style="font-size:11pt;color:#3D3D5C;margin-bottom:6pt;">Woordenlijst</h3>
-<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:14pt;">
-  <thead><tr>
-    <th style="background:#F0EFFF;padding:6pt 8pt;text-align:left;border:0.5pt solid #ccc;width:30%">Woord</th>
-    <th style="background:#F0EFFF;padding:6pt 8pt;text-align:left;border:0.5pt solid #ccc;">Uitleg</th>
-  </tr></thead>
-  <tbody>${woordenRijen}</tbody>
-</table>` : ''}
-${nt2.toelichting_docent ? `
-<div style="background:#FDF0EB;border-left:3pt solid #E8541E;padding:8pt 12pt;font-size:9pt;color:#3D3D5C;line-height:1.5;margin-bottom:6pt;">
-  <strong style="color:#E8541E;">Toelichting voor de docent:</strong> ${nt2.toelichting_docent}
-</div>` : ''}
-</div>`;
   }
 
   // Uitwerking sectie — altijd aan het einde van het Word-document
