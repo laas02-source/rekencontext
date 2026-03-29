@@ -880,7 +880,7 @@ Geef de 3 opgaven als JSON-array.`;
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,
-        max_tokens: 4000,
+        max_tokens: 2500,
         system: systeemPrompt,
         messages: [{ role: 'user', content: gebruikersPrompt }]
       })
