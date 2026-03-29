@@ -324,8 +324,8 @@ de aanpak ligt voor de hand.
 Voorbeeld niveau 2 (detailhandel): Een jas kost 80 euro. Je krijgt 25% korting. Wat betaal je?
 Voorbeeld niveau 2 (zorg): Van de 40 bewoners in een instelling heeft 10% koorts.
 Hoeveel bewoners zijn dat?
-Voorbeeld niveau 2 (economie/admin): Een salaris van 2.400 euro wordt met 50% verhoogd voor overwerk.
-Hoeveel euro is de toeslag?
+Voorbeeld niveau 2 (economie/admin): Een medewerker krijgt een overwerktoeslag van 25% op zijn uurloon van 16 euro.
+Hoeveel euro toeslag krijgt hij per overgewerkt uur?
 TE MOEILIJK VOOR NIVEAU 2: een percentage dat onregelmatig is (zoals 13% of 21%), of waarbij
 de student twee stappen moet zetten (percentage berekenen én vergelijken met een norm). Dat is niveau 3.
 
@@ -663,8 +663,14 @@ function corsHeaders(request, env) {
 
   if (!originToegestaan) return null;   // null = geblokkeerd
 
+  // Als origin null/leeg is (server-to-server zonder Origin-header),
+  // stuur de geconfigureerde origin terug i.p.v. de string "null".
+  const allowOrigin = toegestaneOrigin === '*'
+    ? '*'
+    : (origin || toegestaneOrigin);
+
   return {
-    'Access-Control-Allow-Origin': toegestaneOrigin === '*' ? '*' : origin,
+    'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Vary': 'Origin',
@@ -786,6 +792,29 @@ Dit is de modeloplossing die de docent kan gebruiken bij nakijken of uitleggen.`
   const niveauInfo = NIVEAU_COMPLEXITEIT[niveau.toLowerCase()] || niveau;
   const creboInfo = crebo ? ` (crebo ${crebo})` : '';
 
+  // Bij entree: zoek de bijpassende richting op basis van opleidingsnaam of sector,
+  // zodat de AI niet zelf hoeft te raden welke van de zeven richtingen van toepassing is.
+  const ENTREE_RICHTING_MAP = [
+    { sleutelwoorden: ['bouwen', 'wonen', 'onderhoud', 'schilder', 'timmerman', 'metselaar'], richting: 'Assistent bouwen, wonen en onderhoud' },
+    { sleutelwoorden: ['dienstverlening', 'schoonmaak', 'facilitair', 'zorg', 'verzorgend', 'helpende'], richting: 'Assistent dienstverlening' },
+    { sleutelwoorden: ['horeca', 'voeding', 'voedingsindustrie', 'kok', 'bediening', 'bakker', 'slager'], richting: 'Assistent horeca, voeding of voedingsindustrie' },
+    { sleutelwoorden: ['logistiek', 'magazijn', 'transport', 'bezorger', 'opslag'], richting: 'Assistent logistiek' },
+    { sleutelwoorden: ['metaal', 'elektro', 'installatie', 'lasser', 'monteur', 'elektricien'], richting: 'Assistent metaal-, elektro- en installatietechniek' },
+    { sleutelwoorden: ['mobiliteit', 'auto', 'voertuig', 'garage', 'band', 'automotive'], richting: 'Assistent mobiliteitsbranche' },
+    { sleutelwoorden: ['verkoop', 'retail', 'winkel', 'kassa', 'detailhandel', 'winkelbediende'], richting: 'Assistent verkoop/retail' },
+  ];
+
+  let entreeRichtingSectie = '';
+  if (niveau.toLowerCase() === 'entree') {
+    const zoekterm = (opleidingsnaam + ' ' + (sector || '')).toLowerCase();
+    const gevonden = ENTREE_RICHTING_MAP.find(r =>
+      r.sleutelwoorden.some(w => zoekterm.includes(w))
+    );
+    if (gevonden) {
+      entreeRichtingSectie = `\nENTREERICHTING: ${gevonden.richting}\nGebruik uitsluitend de context en voorbeelden die bij deze richting horen.\n`;
+    }
+  }
+
   let kerntakenSectie = '';
   if (kerntaken && Array.isArray(kerntaken) && kerntaken.length > 0) {
     const regels = kerntaken.map(kt => {
@@ -798,11 +827,23 @@ Dit is de modeloplossing die de docent kan gebruiken bij nakijken of uitleggen.`
 
 OFFICIELE KERNTAKEN UIT HET KWALIFICATIEDOSSIER (SBB):
 Dit zijn de werkelijke taken die een ${opleidingsnaam}-student uitvoert.
-Baseer de beroepscontext uitsluitend op deze taken.
 
 ${regels}
 
-BELANGRIJK: Gebruik alleen situaties die direct voortkomen uit deze kerntaken.`;
+CONCRETISERINGSSTAP — doe dit voor elke opgave die je bedenkt:
+Vertaal het werkproces eerst naar een concrete handeling op de werkvloer:
+  - Wat heeft de student fysiek in handen of voor zich?
+  - Welke actie voert hij/zij uit? (meten, invullen, controleren, afwegen, doorgeven…)
+  - Met welk instrument, formulier of systeem werkt hij/zij?
+Pas als je die handeling helder hebt, bedenk je welk rekenvraagstuk daarbij past.
+
+Dit voorkomt dat abstracte werkprocessen (zoals "bereidt voor" of "verzamelt informatie")
+worden ingevuld met taken die bij een aangrenzend beroep horen — een dispatcher,
+technicus of leidinggevende — in plaats van bij de ${opleidingsnaam} zelf.
+
+ZELFTEST PER OPGAVE: "Voert een ${opleidingsnaam}-student op de werkvloer deze concrete handeling uit,
+of is dit eigenlijk het werk van iemand anders in dezelfde omgeving?"
+Alleen als het antwoord voluit "ja" is, gebruik je deze situatie.`;
   }
 
   const gebruikersPrompt = `Maak 3 contextrijke rekenopgaven:
@@ -810,7 +851,7 @@ BELANGRIJK: Gebruik alleen situaties die direct voortkomen uit deze kerntaken.`;
 OPLEIDING: ${opleidingsnaam}${creboInfo}
 SECTOR: ${sector || 'niet opgegeven'}
 MBO-NIVEAU: ${niveau}
-${kerntakenSectie}
+${entreeRichtingSectie}${kerntakenSectie}
 FUNCTIONEEL REKENDOMEIN: ${domein}
 
 ${domeinInfo}
@@ -819,7 +860,7 @@ NIVEAUEISEN:
 ${niveauInfo}
 
 ZELFTESTS - controleer elke opgave:
-- Herkent een ${opleidingsnaam}-student deze werksituatie?${kerntaken ? '\n- Komt de situatie uit een van de kerntaken hierboven?' : ''}
+- Herkent een ${opleidingsnaam}-student deze werksituatie als iets wat híj/zíj zelf doet?${kerntaken ? `\n- Komt de concrete handeling (niet alleen het thema) uit een van de kerntaken hierboven?\n- Zou een aangrenzend beroep (technicus, dispatcher, leidinggevende) dit eerder doen dan de ${opleidingsnaam} zelf? Zo ja: verwerp en kies opnieuw.` : ''}
 - Bevat de opgave ALLEEN rekenhandelingen uit het domein "${domein}"?
 - Passen het aantal stappen en de getallen bij ${niveau}?
 - Is het antwoord realistisch en berekenbaar?
@@ -885,7 +926,7 @@ Geef de 3 opgaven als JSON-array.`;
 // ─── NT2-AANPASSING (tweede aanroep) ─────────────────────────────────────────
 
 async function handleNt2(body, apiKey, headers) {
-  const { contextbeschrijving, vraag, titel, opleidingsnaam, niveau } = body;
+  const { contextbeschrijving, vraag, titel, opleidingsnaam, niveau, sector } = body;
 
   if (!contextbeschrijving || !vraag) {
     return new Response(
@@ -955,6 +996,7 @@ OUTPUT FORMAAT — geef ALLEEN dit JSON-object, geen andere tekst:
 OPGAVE:
 Titel: ${titel || 'Opgave'}
 Opleiding: ${opleidingsnaam || 'mbo'}
+Sector: ${sector || 'niet opgegeven'}
 Mbo-niveau: ${niveau || ''}
 
 Contextbeschrijving:
