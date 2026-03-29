@@ -4,6 +4,7 @@
 // Gemigreerd van Netlify naar Cloudflare Pages Functions.
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_MODEL = 'claude-sonnet-4-20250514'; // één plek om bij te werken bij een modelupgrade
 
 const DOMEIN_CONTEXT = {
   'Grootheden en eenheden': `
@@ -878,7 +879,7 @@ Geef de 3 opgaven als JSON-array.`;
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: ANTHROPIC_MODEL,
         max_tokens: 4000,
         system: systeemPrompt,
         messages: [{ role: 'user', content: gebruikersPrompt }]
@@ -1020,7 +1021,7 @@ INSTRUCTIE:
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: ANTHROPIC_MODEL,
         max_tokens: 2000,
         system: systeemPrompt,
         messages: [{ role: 'user', content: gebruikersPrompt }]
