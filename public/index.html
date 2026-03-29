@@ -753,7 +753,7 @@ function zoekKeydown(e) {
     e.preventDefault();
     const el = items[zoekActiefIndex];
     kiesOpleiding(el.dataset.crebo, el.dataset.naam, parseInt(el.dataset.niveau), el.dataset.sector);
-  } else if (e.key === 'Escape') {
+  } else if (e.key === 'Escape' || e.key === 'Tab') {
     sluitDropdown();
   }
 }
@@ -933,9 +933,9 @@ async function goStep3() {
 
   // Wisselende voortgangsteksten tijdens het wachten
   const loadingStappen = [
-    'Beroepscontext bepalen voor <strong>' + opleiding + '</strong>\u2026',
-    'Rekensituaties zoeken bij <strong>' + selectedDomain + '</strong>\u2026',
-    'Rekenstappen uitwerken op <strong>' + nl + '</strong>\u2026',
+    'Beroepscontext bepalen voor <strong>' + esc(opleiding) + '</strong>\u2026',
+    'Rekensituaties zoeken bij <strong>' + esc(selectedDomain) + '</strong>\u2026',
+    'Rekenstappen uitwerken op <strong>' + esc(nl) + '</strong>\u2026',
     'Antwoorden en uitwerkingen controleren\u2026',
     'Bijna klaar\u2026'
   ];
@@ -1046,7 +1046,7 @@ function goStep4() {
   const titel = opgave ? (opgave.titel || 'Opgave ' + (gekozenOpgaveIndex + 1)) : 'Geselecteerde opgave';
 
   document.getElementById('context-chip-4').innerHTML =
-    '<span>' + opleiding + '</span><span class="sep"> · </span><span>' + nl + '</span><span class="sep"> · </span><span>' + titel + '</span>';
+    '<span>' + esc(opleiding) + '</span><span class="sep"> · </span><span>' + esc(nl) + '</span><span class="sep"> · </span><span>' + esc(titel) + '</span>';
 
   // Reset NT2
   document.getElementById('nt2-result').classList.remove('visible');
@@ -1319,6 +1319,8 @@ async function genereerNt2() {
     const opleiding = document.getElementById('opleiding').value.trim();
     const niveau = document.getElementById('niveau').value;
     const nl = niveauLabelMap[niveau] || niveau;
+    const match = huidigCrebo ? creboData.find(c => c.crebo === huidigCrebo) : null;
+    const sector = match ? match.sector : '';
 
     const response = await fetch('/api/genereer-opgaven', {
       method: 'POST',
@@ -1329,7 +1331,8 @@ async function genereerNt2() {
         vraag: opgave.vraag,
         titel: opgave.titel,
         opleidingsnaam: opleiding,
-        niveau: nl
+        niveau: nl,
+        sector: sector
       })
     });
 
@@ -1424,7 +1427,7 @@ function exporteerWord() {
     4: 'Niveau 4 — Zelfstandig berekenen'
   };
 
-  let htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  let htmlContent = `<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <style>
   body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; margin: 2cm; color: #1A1A2E; }
   h1 { font-size: 16pt; color: #0D7B6B; margin-bottom: 4pt; }
