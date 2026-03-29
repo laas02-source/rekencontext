@@ -961,7 +961,7 @@ async function goStep3() {
   showStep(3);
 
   const opgavenController = new AbortController();
-  const opgavenTimeout = setTimeout(() => opgavenController.abort(), 25000);
+  const opgavenTimeout = setTimeout(() => opgavenController.abort(), 40000);
 
   try {
     const response = await fetch('/api/genereer-opgaven', {
@@ -1332,7 +1332,7 @@ async function genereerNt2() {
   result.innerHTML = '';
 
   const nt2Controller = new AbortController();
-  const nt2Timeout = setTimeout(() => nt2Controller.abort(), 25000);
+  const nt2Timeout = setTimeout(() => nt2Controller.abort(), 40000);
 
   try {
     const opleiding = document.getElementById('opleiding').value.trim();
