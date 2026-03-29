@@ -576,6 +576,7 @@
       </div>
       <div class="export-grid">
         <div class="export-btn word-btn" onclick="exporteerWord()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Word-document downloaden</div>
+        <p style="font-size:11px;color:var(--ink-soft);margin-top:7px;line-height:1.5;">Het bestand wordt als <code>.doc</code> gedownload (HTML-formaat). Word en LibreOffice openen het correct, maar kunnen een compatibiliteitswaarschuwing tonen — klik dan op <em>Toch openen</em>.</p>
       </div>
     </div>
 
@@ -589,12 +590,26 @@
 
 <script>
 // ═══════════════════════════════════════════
+// XSS-BEVEILIGING — saniteer alle AI-output
+// ═══════════════════════════════════════════
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ═══════════════════════════════════════════
 // CREBO DATABASE — gesplitst voor snelle load
 // Stap 1: laad slanke lookup (83 KB) bij opstart
 // Stap 2: laad kerntaken (1,6 MB) lazy bij crebo-invoer
 // ═══════════════════════════════════════════
 let creboData = [];
-let kerntakenData = null; // null = nog niet geladen
+let kerntakenData = null;        // null = nog niet geladen, {} = geladen (leeg bij fout)
+let kerntakenLaadBelofte = null; // FIX 5: Promise-lock tegen race conditions
 
 fetch('/data/crebo-slim.json')
   .then(r => r.json())
@@ -608,17 +623,27 @@ fetch('/data/crebo-slim.json')
   });
 
 async function laadKerntaken() {
+  // Al klaar — direct terug
   if (kerntakenData !== null) return;
-  try {
-    const chunks = Array.from({length: 10}, (_, i) =>
-      fetch(`/data/crebo-kerntaken-${String(i+1).padStart(2,'0')}.json`).then(r => r.json())
-    );
-    const results = await Promise.all(chunks);
-    kerntakenData = Object.assign({}, ...results);
-  } catch {
-    kerntakenData = {};
-    console.warn('Kerntaken data niet geladen');
-  }
+  // Al bezig — sluit aan op de lopende fetch i.p.v. een tweede te starten
+  if (kerntakenLaadBelofte) return kerntakenLaadBelofte;
+
+  kerntakenLaadBelofte = (async () => {
+    try {
+      const chunks = Array.from({length: 10}, (_, i) =>
+        fetch(`/data/crebo-kerntaken-${String(i+1).padStart(2,'0')}.json`).then(r => r.json())
+      );
+      const results = await Promise.all(chunks);
+      kerntakenData = Object.assign({}, ...results);
+    } catch {
+      kerntakenData = {};
+      console.warn('Kerntaken data niet geladen');
+    } finally {
+      kerntakenLaadBelofte = null; // lock vrijgeven
+    }
+  })();
+
+  return kerntakenLaadBelofte;
 }
 
 // ─── NAAM-ZOEKDROPDOWN ──────────────────────────────────────────────────────
@@ -646,25 +671,62 @@ function zoekOpleiding(val) {
       .filter(c => c.naam.toLowerCase().includes(q))
       .slice(0, 8);
 
+    // Leeg de dropdown veilig via DOM (geen innerHTML met user-input)
+    dropdown.innerHTML = '';
+
     if (resultaten.length === 0) {
-      dropdown.innerHTML = `<div class="naam-zoek-geen" style="padding:14px;">
-        <div style="margin-bottom:8px;">⚠ Geen opleiding gevonden in de database.</div>
-        <div style="font-size:12px;color:var(--ink-mid);margin-bottom:10px;">Je kunt de naam <strong>"${val.trim()}"</strong> toch gebruiken — de tool genereert dan opgaven zonder kerntaken.</div>
-        <button onclick="kiesHandmatig('${val.trim().replace(/'/g, "\'")}'); event.stopPropagation();"
-          style="padding:7px 14px;background:var(--teal-light);color:var(--teal);border:1.5px solid var(--teal-mid);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
-          Gebruik "${val.trim().length > 30 ? val.trim().substring(0,30) + '…' : val.trim()}" →
-        </button>
-      </div>`;
+      // FIX 3: bouw de "niet gevonden" melding via DOM-nodes — geen innerHTML met val
+      const wrapper = document.createElement('div');
+      wrapper.className = 'naam-zoek-geen';
+      wrapper.style.padding = '14px';
+
+      const melding = document.createElement('div');
+      melding.style.marginBottom = '8px';
+      melding.textContent = '⚠ Geen opleiding gevonden in de database.';
+
+      const uitleg = document.createElement('div');
+      uitleg.style.cssText = 'font-size:12px;color:var(--ink-mid);margin-bottom:10px;';
+      uitleg.textContent = 'Je kunt de naam "' + val.trim() + '" toch gebruiken — de tool genereert dan opgaven zonder kerntaken.';
+
+      const knop = document.createElement('button');
+      const weergaveNaam = val.trim().length > 30 ? val.trim().substring(0, 30) + '…' : val.trim();
+      knop.textContent = 'Gebruik "' + weergaveNaam + '" →';
+      knop.style.cssText = 'padding:7px 14px;background:var(--teal-light);color:var(--teal);border:1.5px solid var(--teal-mid);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;';
+      // Sluit de waarde op in een variabele zodat de closure veilig is
+      const gekozenNaam = val.trim();
+      knop.addEventListener('mousedown', e => { e.stopPropagation(); kiesHandmatig(gekozenNaam); });
+
+      wrapper.appendChild(melding);
+      wrapper.appendChild(uitleg);
+      wrapper.appendChild(knop);
+      dropdown.appendChild(wrapper);
       dropdown.classList.add('open');
       hint.textContent = 'Tip: probeer een andere zoekterm, of gebruik de naam handmatig.';
     } else {
-      dropdown.innerHTML = resultaten.map((c, i) =>
-        `<div class="naam-zoek-item" data-crebo="${c.crebo}" data-naam="${c.naam}" data-niveau="${c.niveau}" data-sector="${c.sector}"
-              onmousedown="kiesOpleiding('${c.crebo}','${c.naam.replace(/'/g,"\'")}',${c.niveau},'${c.sector.replace(/'/g,"\'")}')">
-          <div class="naam-zoek-naam">${c.naam}</div>
-          <div class="naam-zoek-meta">Crebo ${c.crebo} &nbsp;·&nbsp; ${c.sector} &nbsp;·&nbsp; Niveau ${c.niveau}</div>
-        </div>`
-      ).join('');
+      // FIX 3: bouw elk dropdown-item via createElement — geen onmousedown als string
+      resultaten.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'naam-zoek-item';
+        item.dataset.crebo  = c.crebo;
+        item.dataset.naam   = c.naam;
+        item.dataset.niveau = c.niveau;
+        item.dataset.sector = c.sector;
+
+        const naamEl = document.createElement('div');
+        naamEl.className = 'naam-zoek-naam';
+        naamEl.textContent = c.naam;
+
+        const metaEl = document.createElement('div');
+        metaEl.className = 'naam-zoek-meta';
+        metaEl.textContent = 'Crebo ' + c.crebo + ' · ' + c.sector + ' · Niveau ' + c.niveau;
+
+        item.appendChild(naamEl);
+        item.appendChild(metaEl);
+        item.addEventListener('mousedown', () =>
+          kiesOpleiding(c.crebo, c.naam, c.niveau, c.sector)
+        );
+        dropdown.appendChild(item);
+      });
       dropdown.classList.add('open');
       hint.textContent = resultaten.length === 8 ? 'Top 8 resultaten — typ verder om te verfijnen.' : '';
     }
@@ -942,18 +1004,18 @@ function renderOpgaven(opgaven, opleiding, niveauLabel) {
     };
 
     const tags = (opgave.tags || []).map(t =>
-      '<span class="tag' + (t === selectedDomain ? ' teal' : '') + '">' + t + '</span>'
+      '<span class="tag' + (t === selectedDomain ? ' teal' : '') + '">' + esc(t) + '</span>'
     ).join('');
 
     const uitwerkingHtml = (opgave.uitwerking || []).map((s, j) =>
-      `<div style="font-size:12px;color:var(--ink-mid);padding:3px 0;border-bottom:1px solid var(--border);"><strong style="color:var(--teal);margin-right:6px;">Stap ${j+1}:</strong>${s}</div>`
+      `<div style="font-size:12px;color:var(--ink-mid);padding:3px 0;border-bottom:1px solid var(--border);"><strong style="color:var(--teal);margin-right:6px;">Stap ${j+1}:</strong>${esc(s)}</div>`
     ).join('');
 
     card.innerHTML = `
       <div class="opgave-number">Opgave ${i + 1}</div>
-      <h3>${opgave.titel || 'Opgave ' + (i+1)}</h3>
-      <p class="opgave-context">${opgave.contextbeschrijving || ''}</p>
-      <p class="opgave-vraag">${opgave.vraag || ''}</p>
+      <h3>${esc(opgave.titel) || 'Opgave ' + (i+1)}</h3>
+      <p class="opgave-context">${esc(opgave.contextbeschrijving)}</p>
+      <p class="opgave-vraag">${esc(opgave.vraag)}</p>
       <div class="opgave-tags">${tags}</div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="opgave-details-toggle" onclick="toggleOpgaveDetails(this, ${i})" aria-expanded="false">
@@ -961,7 +1023,7 @@ function renderOpgaven(opgaven, opleiding, niveauLabel) {
         </button>
       </div>
       <div class="opgave-details" id="opgave-details-${i}">
-        ${opgave.antwoord ? `<div class="opgave-antwoord-preview" style="margin-bottom:8px;">Antwoord: <strong>${opgave.antwoord}</strong></div>` : ''}
+        ${opgave.antwoord ? `<div class="opgave-antwoord-preview" style="margin-bottom:8px;">Antwoord: <strong>${esc(opgave.antwoord)}</strong></div>` : ''}
         ${uitwerkingHtml}
       </div>
     `;
@@ -1002,11 +1064,11 @@ function goStep4() {
 // ── VERBETERING 1: DYNAMISCHE INVULTABEL ──
 // ═══════════════════════════════════════════
 function buildDiffContent(opgave, opleiding, niveau) {
-  const ctx = opgave.contextbeschrijving || '';
-  const vraag = opgave.vraag || '';
-  const titel = opgave.titel || '';
+  const ctx = esc(opgave.contextbeschrijving || '');
+  const vraag = esc(opgave.vraag || '');
+  const titel = esc(opgave.titel || '');
   const stappen = opgave.stappen || [];
-  const antwoord = opgave.antwoord || '';
+  const antwoord = esc(opgave.antwoord || '');
   const uitwerking = opgave.uitwerking || [];
 
   // ── helper: docentblok HTML ──────────────────────────────────────────────
@@ -1015,12 +1077,12 @@ function buildDiffContent(opgave, opleiding, niveau) {
       ? uitwerking.map((s, i) =>
           `<div class="docent-uitwerking-stap">
             <span class="docent-stap-num">Stap ${i+1}:</span>
-            <span class="docent-stap-tekst">${s}</span>
+            <span class="docent-stap-tekst">${esc(s)}</span>
           </div>`).join('')
       : stappen.map((s, i) =>
           `<div class="docent-uitwerking-stap">
             <span class="docent-stap-num">Stap ${i+1}:</span>
-            <span class="docent-stap-tekst">${s.label || ''} &nbsp;<strong>${s.operator||''}</strong>&nbsp; ${s.invoer_omschrijving || ''} = … ${s.eenheid||''}</span>
+            <span class="docent-stap-tekst">${esc(s.label || '')} &nbsp;<strong>${esc(s.operator||'')}</strong>&nbsp; ${esc(s.invoer_omschrijving || '')} = … ${esc(s.eenheid||'')}</span>
           </div>`).join('');
 
     return `
@@ -1074,10 +1136,10 @@ function buildDiffContent(opgave, opleiding, niveau) {
   // Niveau 3 — dynamische invultabel
   const tabelRijen = stappen.map((stap, i) => `
     <tr>
-      <td><strong>Stap ${i + 1}</strong><br><span style="font-size:12px;color:var(--ink-soft)">${stap.label || ''}</span></td>
-      <td class="operator-cell">${stap.operator || '?'}</td>
-      <td class="invoer-cell">${stap.invoer_omschrijving || '_____ ' + (stap.operator || '') + ' _____'}</td>
-      <td class="uitkomst-cell"><input class="tabel-invoer" type="text" placeholder="……… ${stap.eenheid || ''}"></td>
+      <td><strong>Stap ${i + 1}</strong><br><span style="font-size:12px;color:var(--ink-soft)">${esc(stap.label || '')}</span></td>
+      <td class="operator-cell">${esc(stap.operator || '?')}</td>
+      <td class="invoer-cell">${esc(stap.invoer_omschrijving || '_____ ' + (stap.operator || '') + ' _____')}</td>
+      <td class="uitkomst-cell"><input class="tabel-invoer" type="text" placeholder="……… ${esc(stap.eenheid || '')}"></td>
     </tr>`).join('');
 
   const fallbackRijen = `
@@ -1135,7 +1197,7 @@ function buildDiffContent(opgave, opleiding, niveau) {
   const stappenOvz = stappen.length > 0
     ? `<table class="overview-table" style="margin-top:10px">
         <thead><tr><th>Stap</th><th>Bewerking</th><th>Berekening</th><th>Eenheid</th></tr></thead>
-        <tbody>${stappen.map((s,i) => `<tr><td>Stap ${i+1}: ${s.label||''}</td><td style="text-align:center;font-weight:700;color:var(--teal)">${s.operator||''}</td><td style="font-style:italic;color:var(--ink-soft)">${s.invoer_omschrijving||''}</td><td>${s.eenheid||''}</td></tr>`).join('')}
+        <tbody>${stappen.map((s,i) => `<tr><td>Stap ${i+1}: ${esc(s.label||'')}</td><td style="text-align:center;font-weight:700;color:var(--teal)">${esc(s.operator||'')}</td><td style="font-style:italic;color:var(--ink-soft)">${esc(s.invoer_omschrijving||'')}</td><td>${esc(s.eenheid||'')}</td></tr>`).join('')}
         <tr style="background:var(--teal-light)"><td colspan="3" style="font-weight:600;color:var(--teal)">Antwoord</td><td style="font-weight:600;color:var(--teal)">${antwoord || '…'}</td></tr>
         </tbody></table>`
     : '';
@@ -1143,7 +1205,7 @@ function buildDiffContent(opgave, opleiding, niveau) {
   const uitwerkingOvz = uitwerking.length > 0
     ? `<div style="margin-top:12px;padding:10px 14px;background:var(--teal-light);border-radius:6px;font-size:12px;">
         <div style="font-weight:600;color:var(--teal);margin-bottom:6px;">Uitwerking</div>
-        ${uitwerking.map((s,i) => `<div style="margin-bottom:3px;color:var(--ink-mid)"><strong>Stap ${i+1}:</strong> ${s}</div>`).join('')}
+        ${uitwerking.map((s,i) => `<div style="margin-bottom:3px;color:var(--ink-mid)"><strong>Stap ${i+1}:</strong> ${esc(s)}</div>`).join('')}
       </div>`
     : '';
 
@@ -1279,20 +1341,20 @@ async function genereerNt2() {
     const nt2 = data.nt2;
     gegenereerdeOpgaven[gekozenOpgaveIndex].nt2 = nt2;
     const woordenHtml = (nt2.woordenlijst || []).map(w =>
-      `<div class="nt2-woord"><strong>${w.woord}</strong><span>${w.uitleg}</span></div>`
+      `<div class="nt2-woord"><strong>${esc(w.woord)}</strong><span>${esc(w.uitleg)}</span></div>`
     ).join('');
 
     result.innerHTML = `
       <div class="nt2-grid">
         <div class="nt2-box">
           <h4>Origineel</h4>
-          <p><strong>Context:</strong> ${opgave.contextbeschrijving}</p>
-          <p style="margin-top:8px"><strong>Vraag:</strong> ${opgave.vraag}</p>
+          <p><strong>Context:</strong> ${esc(opgave.contextbeschrijving)}</p>
+          <p style="margin-top:8px"><strong>Vraag:</strong> ${esc(opgave.vraag)}</p>
         </div>
         <div class="nt2-box">
           <h4>NT2-versie</h4>
-          <p><strong>Context:</strong> ${nt2.nt2_contextbeschrijving || ''}</p>
-          <p style="margin-top:8px"><strong>Vraag:</strong> ${nt2.nt2_vraag || ''}</p>
+          <p><strong>Context:</strong> ${esc(nt2.nt2_contextbeschrijving || '')}</p>
+          <p style="margin-top:8px"><strong>Vraag:</strong> ${esc(nt2.nt2_vraag || '')}</p>
         </div>
       </div>
       ${woordenHtml ? `
@@ -1302,17 +1364,19 @@ async function genereerNt2() {
       </div>` : ''}
       ${nt2.toelichting_docent ? `
       <div class="nt2-docent-note">
-        <strong>Toelichting voor de docent:</strong> ${nt2.toelichting_docent}
+        <strong>Toelichting voor de docent:</strong> ${esc(nt2.toelichting_docent)}
       </div>` : ''}
     `;
 
     result.classList.add('visible');
 
   } catch (err) {
-    result.innerHTML = `<div class="error-box visible"><p>Fout bij NT2-aanpassing: ${err.message}</p></div>`;
+    result.innerHTML = `<div class="error-box visible"><p>Fout bij NT2-aanpassing: ${esc(err.message)}</p></div>`;
     result.classList.add('visible');
-    btn.disabled = false;
   } finally {
+    // FIX 4: knop altijd herstellen — ook bij succes, zodat de gebruiker
+    // een herziene versie kan genereren als de opgave gewijzigd is.
+    btn.disabled = false;
     loading.classList.remove('visible');
   }
 }
@@ -1333,10 +1397,25 @@ function exporteerWord() {
   const opgave = gegenereerdeOpgaven[gekozenOpgaveIndex];
   if (!opgave) return;
 
+  // FIX 6: voorkom leeg document als geen enkel niveau geselecteerd is
+  if (geselecteerdeNiveaus.size === 0) {
+    alert('Selecteer minimaal één niveau om te exporteren.');
+    return;
+  }
+
   const opleiding = document.getElementById('opleiding').value.trim();
   const niveau = document.getElementById('niveau').value;
   const nl = niveauLabelMap[niveau] || niveau;
   const stappen = opgave.stappen || [];
+
+  // FIX 2: pre-escape alle AI-gegenereerde waarden voor gebruik in HTML-export
+  const eOpleiding    = esc(opleiding);
+  const eNl           = esc(nl);
+  const eDomein       = esc(selectedDomain);
+  const eTitel        = esc(opgave.titel || 'Opgave');
+  const eCtx          = esc(opgave.contextbeschrijving || '');
+  const eVraag        = esc(opgave.vraag || '');
+  const eAntwoord     = esc(opgave.antwoord || '');
 
   const niveauTitels = {
     1: 'Niveau 1 — Doen in de praktijk',
@@ -1361,15 +1440,15 @@ function exporteerWord() {
   @page { margin: 2cm; }
 </style>
 </head><body>
-<h1>RekenContext — ${opgave.titel || 'Opgave'}</h1>
-<div class="meta">Opleiding: ${opleiding} &nbsp;|&nbsp; Niveau: ${nl} &nbsp;|&nbsp; Domein: ${selectedDomain}</div>`;
+<h1>RekenContext — ${eTitel}</h1>
+<div class="meta">Opleiding: ${eOpleiding} &nbsp;|&nbsp; Niveau: ${eNl} &nbsp;|&nbsp; Domein: ${eDomein}</div>`;
 
   if (geselecteerdeNiveaus.has(1)) {
     htmlContent += `
 <h2>${niveauTitels[1]}</h2>
 <div class="niveau-label">Informeel handelen</div>
 <div class="context-box"><strong>Docentinstructie:</strong> Zet materialen klaar die passen bij deze situatie. Laat de student de opgave uitvoeren alsof het een echte werksituatie is — zonder vooraf te rekenen op papier. Bespreek daarna samen hoe ze te werk zijn gegaan.</div>
-<div class="context-box"><strong>Situatie voor de student (mondeling):</strong><br>${opgave.contextbeschrijving || ''}</div>
+<div class="context-box"><strong>Situatie voor de student (mondeling):</strong><br>${eCtx}</div>
 <div class="note"><strong>Didactische keuze:</strong> Geen pen of papier. Begrip ontstaat door uitvoeren.</div>`;
   }
 
@@ -1377,22 +1456,22 @@ function exporteerWord() {
     htmlContent += `
 <h2>${niveauTitels[2]}</h2>
 <div class="niveau-label">Voorstellen concreet</div>
-<div class="context-box">${opgave.contextbeschrijving || ''}</div>
+<div class="context-box">${eCtx}</div>
 <p><em>[Voeg hier een foto of afbeelding toe die de situatie herkenbaar maakt.]</em></p>
-<div class="vraag">${opgave.vraag || ''}</div>
+<div class="vraag">${eVraag}</div>
 <div class="note"><strong>Didactische keuze:</strong> De afbeelding verkleint de stap van werkelijkheid naar papier.</div>`;
   }
 
   if (geselecteerdeNiveaus.has(3)) {
     const tabelRijen = stappen.length > 0
-      ? stappen.map((s, i) => `<tr><td><strong>Stap ${i+1}:</strong> ${s.label||''}</td><td style="text-align:center;font-weight:bold">${s.operator||''}</td><td style="font-style:italic">${s.invoer_omschrijving||''}</td><td>………… ${s.eenheid||''}</td></tr>`).join('')
+      ? stappen.map((s, i) => `<tr><td><strong>Stap ${i+1}:</strong> ${esc(s.label||'')}</td><td style="text-align:center;font-weight:bold">${esc(s.operator||'')}</td><td style="font-style:italic">${esc(s.invoer_omschrijving||'')}</td><td>………… ${esc(s.eenheid||'')}</td></tr>`).join('')
       : `<tr><td>Stap 1</td><td style="text-align:center">×</td><td>_____ × _____</td><td>…………</td></tr>
          <tr><td>Stap 2</td><td style="text-align:center">÷</td><td>_____ ÷ _____</td><td>…………</td></tr>`;
 
     htmlContent += `
 <h2>${niveauTitels[3]}</h2>
 <div class="niveau-label">Voorstellen abstract</div>
-<div class="context-box">${opgave.contextbeschrijving || ''}</div>
+<div class="context-box">${eCtx}</div>
 <p>Gebruik de tabel om je berekening stap voor stap te ordenen:</p>
 <table>
   <thead><tr><th>Rekenstap</th><th>+/−/×/÷</th><th>Berekening</th><th>Uitkomst</th></tr></thead>
@@ -1401,7 +1480,7 @@ function exporteerWord() {
     <tr style="background:#E6F5F2"><td colspan="3" style="font-weight:bold;color:#0D7B6B">Antwoord</td><td style="font-weight:bold;color:#0D7B6B">…………………</td></tr>
   </tbody>
 </table>
-<div class="vraag">${opgave.vraag || ''}</div>
+<div class="vraag">${eVraag}</div>
 <div class="note"><strong>Didactische keuze:</strong> Het schema structureert het denkproces zonder de berekening voor te doen.</div>`;
   }
 
@@ -1409,9 +1488,9 @@ function exporteerWord() {
     htmlContent += `
 <h2>${niveauTitels[4]}</h2>
 <div class="niveau-label">Formeel handelen</div>
-<div class="context-box">${opgave.contextbeschrijving || ''}</div>
-<div class="vraag">${opgave.vraag || ''} Laat je berekening zien en controleer of je antwoord realistisch is.</div>
-${opgave.antwoord ? `<p style="font-size:9pt;color:#7A7A9A"><strong>Verwacht antwoord:</strong> ${opgave.antwoord}</p>` : ''}
+<div class="context-box">${eCtx}</div>
+<div class="vraag">${eVraag} Laat je berekening zien en controleer of je antwoord realistisch is.</div>
+${eAntwoord ? `<p style="font-size:9pt;color:#7A7A9A"><strong>Verwacht antwoord:</strong> ${eAntwoord}</p>` : ''}
 <div class="note"><strong>Didactische keuze:</strong> Geen schema, geen afbeelding. De student structureert het rekenproces zelf.</div>`;
   }
 
@@ -1420,8 +1499,8 @@ ${opgave.antwoord ? `<p style="font-size:9pt;color:#7A7A9A"><strong>Verwacht ant
   if (nt2) {
     const woordenRijen = (nt2.woordenlijst || []).map(w =>
       `<tr>
-        <td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#7F77DD;width:30%">${w.woord}</td>
-        <td style="padding:6pt 8pt;border:0.5pt solid #ccc;">${w.uitleg}</td>
+        <td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#7F77DD;width:30%">${esc(w.woord)}</td>
+        <td style="padding:6pt 8pt;border:0.5pt solid #ccc;">${esc(w.uitleg)}</td>
       </tr>`
     ).join('');
 
@@ -1429,9 +1508,9 @@ ${opgave.antwoord ? `<p style="font-size:9pt;color:#7A7A9A"><strong>Verwacht ant
 <h2 style="color:#7F77DD;border-bottom:1pt solid #7F77DD;padding-bottom:3pt;margin-bottom:10pt;">NT2-versie (voor student met Nederlands als tweede taal)</h2>
 <p style="font-size:9pt;color:#7A7A9A;margin-bottom:12pt;font-style:italic;">Deze versie heeft dezelfde rekeninhoud als de oorspronkelijke opgave. Alleen de taal is toegankelijker gemaakt.</p>
 <h3 style="font-size:11pt;color:#3D3D5C;margin-bottom:5pt;">Situatie</h3>
-<p style="font-size:11pt;margin-bottom:12pt;line-height:1.6;">${nt2.nt2_contextbeschrijving || ''}</p>
+<p style="font-size:11pt;margin-bottom:12pt;line-height:1.6;">${esc(nt2.nt2_contextbeschrijving || '')}</p>
 <h3 style="font-size:11pt;color:#3D3D5C;margin-bottom:5pt;">Vraag</h3>
-<p style="font-size:11pt;margin-bottom:14pt;font-weight:bold;line-height:1.6;">${nt2.nt2_vraag || ''}</p>
+<p style="font-size:11pt;margin-bottom:14pt;font-weight:bold;line-height:1.6;">${esc(nt2.nt2_vraag || '')}</p>
 ${woordenRijen ? `
 <h3 style="font-size:11pt;color:#3D3D5C;margin-bottom:6pt;">Woordenlijst</h3>
 <table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:14pt;">
@@ -1443,29 +1522,29 @@ ${woordenRijen ? `
 </table>` : ''}
 ${nt2.toelichting_docent ? `
 <div style="background:#FDF0EB;border-left:3pt solid #E8541E;padding:8pt 12pt;font-size:9pt;color:#3D3D5C;line-height:1.5;margin-bottom:6pt;">
-  <strong style="color:#E8541E;">Toelichting voor de docent:</strong> ${nt2.toelichting_docent}
+  <strong style="color:#E8541E;">Toelichting voor de docent:</strong> ${esc(nt2.toelichting_docent)}
 </div>` : ''}
 </div>`;
   }
 
   // Uitwerking sectie — altijd aan het einde van het Word-document
   const uitwerking = opgave.uitwerking || [];
-  if (opgave.antwoord || uitwerking.length > 0) {
+  if (eAntwoord || uitwerking.length > 0) {
     htmlContent += `<div style="page-break-before:always;"></div>
 <h2 style="color:#0D7B6B;border-bottom:1pt solid #5BBFB0;padding-bottom:3pt;margin-bottom:10pt;">Antwoord &amp; uitwerking (voor docent)</h2>`;
-    if (opgave.antwoord) {
-      htmlContent += `<p style="font-size:13pt;margin-bottom:10pt;">Antwoord: <strong style="color:#0D7B6B">${opgave.antwoord}</strong></p>`;
+    if (eAntwoord) {
+      htmlContent += `<p style="font-size:13pt;margin-bottom:10pt;">Antwoord: <strong style="color:#0D7B6B">${eAntwoord}</strong></p>`;
     }
     if (uitwerking.length > 0) {
       htmlContent += `<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-top:8pt;">
         <thead><tr><th style="background:#EDE5D4;padding:6pt 8pt;text-align:left;border:0.5pt solid #ccc;">Stap</th><th style="background:#EDE5D4;padding:6pt 8pt;text-align:left;border:0.5pt solid #ccc;">Uitwerking</th></tr></thead>
-        <tbody>${uitwerking.map((s,i) => `<tr><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B;white-space:nowrap;">Stap ${i+1}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;">${s}</td></tr>`).join('')}</tbody>
+        <tbody>${uitwerking.map((s,i) => `<tr><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B;white-space:nowrap;">Stap ${i+1}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;">${esc(s)}</td></tr>`).join('')}</tbody>
       </table>`;
     } else if (stappen.length > 0) {
       htmlContent += `<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-top:8pt;">
         <thead><tr><th style="background:#EDE5D4;padding:6pt 8pt;text-align:left;border:0.5pt solid #ccc;">Stap</th><th style="background:#EDE5D4;padding:6pt 8pt;border:0.5pt solid #ccc;">Bewerking</th><th style="background:#EDE5D4;padding:6pt 8pt;border:0.5pt solid #ccc;">Berekening</th><th style="background:#EDE5D4;padding:6pt 8pt;border:0.5pt solid #ccc;">Eenheid</th></tr></thead>
-        <tbody>${stappen.map((s,i) => `<tr><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">Stap ${i+1}: ${s.label||''}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;text-align:center;font-weight:bold">${s.operator||''}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-style:italic">${s.invoer_omschrijving||''}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc">${s.eenheid||''}</td></tr>`).join('')}
-        <tr style="background:#E6F5F2"><td colspan="3" style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">Antwoord</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">${opgave.antwoord||'…'}</td></tr>
+        <tbody>${stappen.map((s,i) => `<tr><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">Stap ${i+1}: ${esc(s.label||'')}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;text-align:center;font-weight:bold">${esc(s.operator||'')}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-style:italic">${esc(s.invoer_omschrijving||'')}</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc">${esc(s.eenheid||'')}</td></tr>`).join('')}
+        <tr style="background:#E6F5F2"><td colspan="3" style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">Antwoord</td><td style="padding:6pt 8pt;border:0.5pt solid #ccc;font-weight:bold;color:#0D7B6B">${eAntwoord||'…'}</td></tr>
         </tbody></table>`;
     }
     htmlContent += `<p style="font-size:8pt;color:#7A7A9A;margin-top:12pt;font-style:italic;">Deze pagina is alleen bedoeld voor de docent en wordt apart bewaard van de leerlingversie.</p>`;
@@ -1476,13 +1555,16 @@ ${nt2.toelichting_docent ? `
 
   const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'RekenContext_' + (opgave.titel || 'opgave').replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_') + '.doc';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RekenContext_' + (opgave.titel || 'opgave').replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_') + '.doc';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 // ═══════════════════════════════════════════
