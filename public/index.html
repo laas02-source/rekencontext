@@ -266,18 +266,22 @@
   /* ── VERBETERING 5: NIVEAU-SELECTIE VOOR EXPORT ── */
   .export-section { margin-top:24px; border-top:1px solid var(--border); padding-top:22px; }
   .export-section h3 { font-size:15px; font-weight:600; color:var(--ink); margin-bottom:6px; }
-  .export-section > p { font-size:13px; color:var(--ink-soft); margin-bottom:14px; }
-  .niveau-selectie { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
-  .niveau-check { display:flex; align-items:center; gap:7px; padding:7px 14px; border:1.5px solid var(--border); border-radius:7px; cursor:pointer; font-size:13px; font-weight:500; color:var(--ink-mid); background:var(--white); transition:all 0.15s; user-select:none; }
+  .export-section > p { font-size:13px; color:var(--ink-soft); margin-bottom:10px; }
+  /* Niveauselectie: subtiele container om het onderscheid met de actieknop te benadrukken */
+  .niveau-selectie-groep { background:var(--warm); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:20px; }
+  .niveau-selectie-label { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:10px; }
+  .niveau-selectie { display:flex; flex-wrap:wrap; gap:8px; }
+  .niveau-check { display:flex; align-items:center; gap:7px; padding:6px 12px; border:1.5px solid var(--border); border-radius:7px; cursor:pointer; font-size:13px; font-weight:500; color:var(--ink-mid); background:var(--white); transition:all 0.15s; user-select:none; }
   .niveau-check:hover { border-color:var(--teal-mid); color:var(--teal); }
   .niveau-check.geselecteerd { border-color:var(--teal); background:var(--teal-light); color:var(--teal); }
   .niveau-check input[type="checkbox"] { display:none; }
-  .niveau-check-icon { font-size:14px; }
-  .export-grid { display:flex; flex-wrap:wrap; gap:9px; }
-  .export-btn { display:inline-flex; align-items:center; gap:8px; padding:9px 17px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--ink-mid); transition:all 0.15s; }
-  .export-btn:hover { border-color:var(--teal-mid); color:var(--teal); background:var(--teal-light); }
-  .export-btn.word-btn { border-color:var(--teal-mid); background:var(--teal-light); color:var(--teal); }
-  .export-btn.word-btn:hover { background:var(--teal); color:white; }
+  .niveau-check-icon { font-size:13px; }
+  /* Exportactie: duidelijk primaire knop, los van de selectievakjes */
+  .export-actie { display:flex; flex-direction:column; gap:8px; }
+  .export-btn-word { display:inline-flex; align-items:center; gap:9px; padding:12px 22px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; border:none; background:var(--teal); color:white; transition:all 0.15s; align-self:flex-start; }
+  .export-btn-word:hover { background:#0A6358; transform:translateY(-1px); box-shadow:0 4px 14px rgba(13,123,107,0.28); }
+  .export-btn-word:active { transform:none; box-shadow:none; }
+  .export-hint { font-size:11px; color:var(--ink-soft); line-height:1.5; }
   .soon-tag { font-size:10px; background:var(--warm-dark); padding:1px 6px; border-radius:4px; color:var(--ink-soft); }
 
   /* RESPONSIVE */
@@ -555,28 +559,31 @@
     <!-- ── VERBETERING 5: NIVEAU-SELECTIE + WORD-EXPORT ── -->
     <div class="export-section">
       <h3>Exporteren</h3>
-      <p>Selecteer welke niveaus je wilt exporteren:</p>
-      <div class="niveau-selectie" id="niveau-selectie">
-        <label class="niveau-check geselecteerd" id="check-n1">
-          <input type="checkbox" checked onchange="toggleNiveauCheck(1, this.checked)">
-          <span class="niveau-check-icon">1</span> Doen in de praktijk
-        </label>
-        <label class="niveau-check geselecteerd" id="check-n2">
-          <input type="checkbox" checked onchange="toggleNiveauCheck(2, this.checked)">
-          <span class="niveau-check-icon">2</span> Werken met afbeelding
-        </label>
-        <label class="niveau-check geselecteerd" id="check-n3">
-          <input type="checkbox" checked onchange="toggleNiveauCheck(3, this.checked)">
-          <span class="niveau-check-icon">3</span> Werken met schema
-        </label>
-        <label class="niveau-check geselecteerd" id="check-n4">
-          <input type="checkbox" checked onchange="toggleNiveauCheck(4, this.checked)">
-          <span class="niveau-check-icon">4</span> Zelfstandig berekenen
-        </label>
+      <p>Selecteer welke niveaus je wilt exporteren en download het document.</p>
+      <div class="niveau-selectie-groep">
+        <div class="niveau-selectie-label">Niveaus in export</div>
+        <div class="niveau-selectie" id="niveau-selectie">
+          <label class="niveau-check geselecteerd" id="check-n1">
+            <input type="checkbox" checked onchange="toggleNiveauCheck(1, this.checked)">
+            <span class="niveau-check-icon">1</span> Doen in de praktijk
+          </label>
+          <label class="niveau-check geselecteerd" id="check-n2">
+            <input type="checkbox" checked onchange="toggleNiveauCheck(2, this.checked)">
+            <span class="niveau-check-icon">2</span> Werken met afbeelding
+          </label>
+          <label class="niveau-check geselecteerd" id="check-n3">
+            <input type="checkbox" checked onchange="toggleNiveauCheck(3, this.checked)">
+            <span class="niveau-check-icon">3</span> Werken met schema
+          </label>
+          <label class="niveau-check geselecteerd" id="check-n4">
+            <input type="checkbox" checked onchange="toggleNiveauCheck(4, this.checked)">
+            <span class="niveau-check-icon">4</span> Zelfstandig berekenen
+          </label>
+        </div>
       </div>
-      <div class="export-grid">
-        <div class="export-btn word-btn" onclick="exporteerWord()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Word-document downloaden</div>
-        <p style="font-size:11px;color:var(--ink-soft);margin-top:7px;line-height:1.5;">Het bestand wordt als <code>.doc</code> gedownload (HTML-formaat). Word en LibreOffice openen het correct, maar kunnen een compatibiliteitswaarschuwing tonen — klik dan op <em>Toch openen</em>.</p>
+      <div class="export-actie">
+        <button class="export-btn-word" onclick="exporteerWord()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Word-document downloaden</button>
+        <p class="export-hint">Het bestand wordt als <code>.doc</code> gedownload (HTML-formaat). Word en LibreOffice openen het correct, maar kunnen een compatibiliteitswaarschuwing tonen — klik dan op <em>Toch openen</em>.</p>
       </div>
     </div>
 
@@ -953,10 +960,14 @@ async function goStep3() {
   maxStep = Math.max(maxStep, 3);
   showStep(3);
 
+  const opgavenController = new AbortController();
+  const opgavenTimeout = setTimeout(() => opgavenController.abort(), 25000);
+
   try {
     const response = await fetch('/api/genereer-opgaven', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: opgavenController.signal,
       body: JSON.stringify({
         crebo: crebo || null,
         opleidingsnaam: opleiding,
@@ -981,8 +992,13 @@ async function goStep3() {
   } catch (err) {
     clearInterval(loadingInterval);
     document.getElementById('loading-3').style.display = 'none';
-    document.getElementById('error-3-msg').textContent = 'Fout: ' + (err.message || 'Kon geen verbinding maken met de AI-service.');
+    const melding = err.name === 'AbortError'
+      ? 'De aanvraag duurde te lang. Probeer het opnieuw.'
+      : 'Fout: ' + (err.message || 'Kon geen verbinding maken met de AI-service.');
+    document.getElementById('error-3-msg').textContent = melding;
     document.getElementById('error-3').classList.add('visible');
+  } finally {
+    clearTimeout(opgavenTimeout);
   }
 }
 
@@ -990,7 +1006,7 @@ function renderOpgaven(opgaven, opleiding, niveauLabel) {
   document.getElementById('loading-3').style.display = 'none';
   document.getElementById('opgaven-list').style.display = 'block';
   document.getElementById('context-chip-3').innerHTML =
-    '<span>' + opleiding + '</span><span class="sep"> · </span><span>' + niveauLabel + '</span><span class="sep"> · </span><span>' + selectedDomain + '</span>';
+    '<span>' + esc(opleiding) + '</span><span class="sep"> · </span><span>' + esc(niveauLabel) + '</span><span class="sep"> · </span><span>' + esc(selectedDomain) + '</span>';
 
   const container = document.getElementById('opgaven-container');
   container.innerHTML = '';
@@ -1315,6 +1331,9 @@ async function genereerNt2() {
   result.classList.remove('visible');
   result.innerHTML = '';
 
+  const nt2Controller = new AbortController();
+  const nt2Timeout = setTimeout(() => nt2Controller.abort(), 25000);
+
   try {
     const opleiding = document.getElementById('opleiding').value.trim();
     const niveau = document.getElementById('niveau').value;
@@ -1325,6 +1344,7 @@ async function genereerNt2() {
     const response = await fetch('/api/genereer-opgaven', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: nt2Controller.signal,
       body: JSON.stringify({
         mode: 'nt2',
         contextbeschrijving: opgave.contextbeschrijving,
@@ -1374,9 +1394,13 @@ async function genereerNt2() {
     result.classList.add('visible');
 
   } catch (err) {
-    result.innerHTML = `<div class="error-box visible"><p>Fout bij NT2-aanpassing: ${esc(err.message)}</p></div>`;
+    const melding = err.name === 'AbortError'
+      ? 'De aanvraag duurde te lang. Probeer het opnieuw.'
+      : (err.message || 'Onbekende fout');
+    result.innerHTML = `<div class="error-box visible"><p>Fout bij NT2-aanpassing: ${esc(melding)}</p></div>`;
     result.classList.add('visible');
   } finally {
+    clearTimeout(nt2Timeout);
     // FIX 4: knop altijd herstellen — ook bij succes, zodat de gebruiker
     // een herziene versie kan genereren als de opgave gewijzigd is.
     btn.disabled = false;
