@@ -649,26 +649,50 @@ STRUCTUUR: Student bepaalt zelf de aanpak. Terugrekenen of meerstapsredenering v
 
 // ─── CORS-HEADERS ────────────────────────────────────────────────────────────
 
-function corsHeaders() {
+// Geeft de juiste CORS-headers terug als de origin is toegestaan,
+// of null als de origin niet is toegestaan (wildcard '*' staat altijd toe).
+function corsHeaders(request, env) {
+  const toegestaneOrigin = env.ALLOWED_ORIGIN || '*';
+  const origin = request ? request.headers.get('Origin') : null;
+
+  // Bij wildcard altijd toestaan; bij specifieke origin alleen als die overeenkomt.
+  const originToegestaan =
+    toegestaneOrigin === '*' ||
+    !origin ||                          // server-to-server request zonder Origin
+    origin === toegestaneOrigin;
+
+  if (!originToegestaan) return null;   // null = geblokkeerd
+
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': toegestaneOrigin === '*' ? '*' : origin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
   };
 }
 
 // ─── HOOFD-HANDLER (Cloudflare Pages Functions) ──────────────────────────────
 
-export async function onRequestOptions() {
-  return new Response(null, { status: 204, headers: corsHeaders() });
+export async function onRequestOptions(context) {
+  const cors = corsHeaders(context.request, context.env);
+  if (!cors) return new Response(null, { status: 403 });
+  return new Response(null, { status: 204, headers: cors });
 }
 
 export async function onRequestPost(context) {
   const { request, env } = context;
 
+  const cors = corsHeaders(request, env);
+  if (!cors) {
+    return new Response(
+      JSON.stringify({ error: 'Origin niet toegestaan' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   const headers = {
     'Content-Type': 'application/json',
-    ...corsHeaders(),
+    ...cors,
   };
 
   let body;
@@ -738,7 +762,7 @@ OUTPUT FORMAAT - geef ALLEEN een JSON-array, geen andere tekst:
     "antwoord": "het correcte antwoord inclusief eenheid, bijv. \"4 tabletten\"",
     "uitwerking": [
       "Stap 1: 2,4 g × 1000 = 2400 mg",
-      "Stap 2: 2400 mg ÷ 500 mg = 4,8 → afgerond 4 tabletten"
+      "Stap 2: 2400 mg ÷ 500 mg = 4,8 → naar beneden afgerond op 4 tabletten (veiligheidsregel: bij medicatie nooit meer dan berekend)"
     ],
     "tags": ["domeinnaam", "niveau", "beroepsnaam"]
   }
@@ -753,6 +777,7 @@ Geef 2-3 stappen per opgave. Elke stap heeft:
 
 Het veld uitwerking bevat de volledig uitgeschreven berekening per stap, voor de docent.
 Schrijf elke stap als één zin: "Stap N: [wat] × [getal] = [uitkomst] [eenheid]".
+Bij afronden: noteer altijd de richting én de reden (bijv. "→ naar beneden afgerond op 4 tabletten (veiligheidsregel medicatie)" of "→ naar boven afgerond op 5 blikken (volledige hoeveelheid nodig)").
 Dit is de modeloplossing die de docent kan gebruiken bij nakijken of uitleggen.`;
 
   // Stuur alleen de tekst van het gekozen domein mee — niet alle vijf.
@@ -813,7 +838,7 @@ Geef de 3 opgaven als JSON-array.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 3000,
+        max_tokens: 4000,
         system: systeemPrompt,
         messages: [{ role: 'user', content: gebruikersPrompt }]
       })
@@ -821,9 +846,12 @@ Geef de 3 opgaven als JSON-array.`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Anthropic API error:', errorText);
+      console.error('Anthropic API error:', response.status, errorText);
+      let gebruikersfout = 'AI-service tijdelijk niet beschikbaar';
+      if (response.status === 429) gebruikersfout = 'Te veel verzoeken — wacht even en probeer opnieuw.';
+      else if (response.status === 401) gebruikersfout = 'API-sleutel ongeldig of verlopen.';
       return new Response(
-        JSON.stringify({ error: 'AI-service tijdelijk niet beschikbaar' }),
+        JSON.stringify({ error: gebruikersfout, statusCode: response.status }),
         { status: 502, headers }
       );
     }
@@ -951,15 +979,19 @@ INSTRUCTIE:
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1600,
+        max_tokens: 2000,
         system: systeemPrompt,
         messages: [{ role: 'user', content: gebruikersPrompt }]
       })
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('NT2 Anthropic API error:', response.status, errorText);
+      let gebruikersfout = 'NT2-aanpassing tijdelijk niet beschikbaar';
+      if (response.status === 429) gebruikersfout = 'Te veel verzoeken — wacht even en probeer opnieuw.';
       return new Response(
-        JSON.stringify({ error: 'NT2-aanpassing tijdelijk niet beschikbaar' }),
+        JSON.stringify({ error: gebruikersfout, statusCode: response.status }),
         { status: 502, headers }
       );
     }
