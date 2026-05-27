@@ -4,7 +4,6 @@
 // Gemigreerd van Netlify naar Cloudflare Pages Functions.
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_MODEL = 'claude-sonnet-4-20250514'; // één plek om bij te werken bij een modelupgrade
 
 const DOMEIN_CONTEXT = {
   'Grootheden en eenheden': `
@@ -325,8 +324,8 @@ de aanpak ligt voor de hand.
 Voorbeeld niveau 2 (detailhandel): Een jas kost 80 euro. Je krijgt 25% korting. Wat betaal je?
 Voorbeeld niveau 2 (zorg): Van de 40 bewoners in een instelling heeft 10% koorts.
 Hoeveel bewoners zijn dat?
-Voorbeeld niveau 2 (economie/admin): Een medewerker krijgt een overwerktoeslag van 25% op zijn uurloon van 16 euro.
-Hoeveel euro toeslag krijgt hij per overgewerkt uur?
+Voorbeeld niveau 2 (economie/admin): Een salaris van 2.400 euro wordt met 50% verhoogd voor overwerk.
+Hoeveel euro is de toeslag?
 TE MOEILIJK VOOR NIVEAU 2: een percentage dat onregelmatig is (zoals 13% of 21%), of waarbij
 de student twee stappen moet zetten (percentage berekenen én vergelijken met een norm). Dat is niveau 3.
 
@@ -650,56 +649,26 @@ STRUCTUUR: Student bepaalt zelf de aanpak. Terugrekenen of meerstapsredenering v
 
 // ─── CORS-HEADERS ────────────────────────────────────────────────────────────
 
-// Geeft de juiste CORS-headers terug als de origin is toegestaan,
-// of null als de origin niet is toegestaan (wildcard '*' staat altijd toe).
-function corsHeaders(request, env) {
-  const toegestaneOrigin = env.ALLOWED_ORIGIN || '*';
-  const origin = request ? request.headers.get('Origin') : null;
-
-  // Bij wildcard altijd toestaan; bij specifieke origin alleen als die overeenkomt.
-  const originToegestaan =
-    toegestaneOrigin === '*' ||
-    !origin ||                          // server-to-server request zonder Origin
-    origin === toegestaneOrigin;
-
-  if (!originToegestaan) return null;   // null = geblokkeerd
-
-  // Als origin null/leeg is (server-to-server zonder Origin-header),
-  // stuur de geconfigureerde origin terug i.p.v. de string "null".
-  const allowOrigin = toegestaneOrigin === '*'
-    ? '*'
-    : (origin || toegestaneOrigin);
-
+function corsHeaders() {
   return {
-    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Vary': 'Origin',
   };
 }
 
 // ─── HOOFD-HANDLER (Cloudflare Pages Functions) ──────────────────────────────
 
-export async function onRequestOptions(context) {
-  const cors = corsHeaders(context.request, context.env);
-  if (!cors) return new Response(null, { status: 403 });
-  return new Response(null, { status: 204, headers: cors });
+export async function onRequestOptions() {
+  return new Response(null, { status: 204, headers: corsHeaders() });
 }
 
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  const cors = corsHeaders(request, env);
-  if (!cors) {
-    return new Response(
-      JSON.stringify({ error: 'Origin niet toegestaan' }),
-      { status: 403, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
   const headers = {
     'Content-Type': 'application/json',
-    ...cors,
+    ...corsHeaders(),
   };
 
   let body;
@@ -769,7 +738,7 @@ OUTPUT FORMAAT - geef ALLEEN een JSON-array, geen andere tekst:
     "antwoord": "het correcte antwoord inclusief eenheid, bijv. \"4 tabletten\"",
     "uitwerking": [
       "Stap 1: 2,4 g × 1000 = 2400 mg",
-      "Stap 2: 2400 mg ÷ 500 mg = 4,8 → naar beneden afgerond op 4 tabletten (veiligheidsregel: bij medicatie nooit meer dan berekend)"
+      "Stap 2: 2400 mg ÷ 500 mg = 4,8 → afgerond 4 tabletten"
     ],
     "tags": ["domeinnaam", "niveau", "beroepsnaam"]
   }
@@ -784,7 +753,6 @@ Geef 2-3 stappen per opgave. Elke stap heeft:
 
 Het veld uitwerking bevat de volledig uitgeschreven berekening per stap, voor de docent.
 Schrijf elke stap als één zin: "Stap N: [wat] × [getal] = [uitkomst] [eenheid]".
-Bij afronden: noteer altijd de richting én de reden (bijv. "→ naar beneden afgerond op 4 tabletten (veiligheidsregel medicatie)" of "→ naar boven afgerond op 5 blikken (volledige hoeveelheid nodig)").
 Dit is de modeloplossing die de docent kan gebruiken bij nakijken of uitleggen.`;
 
   // Stuur alleen de tekst van het gekozen domein mee — niet alle vijf.
@@ -792,29 +760,6 @@ Dit is de modeloplossing die de docent kan gebruiken bij nakijken of uitleggen.`
   const domeinInfo = DOMEIN_CONTEXT[domein] || `Domein: ${domein}`;
   const niveauInfo = NIVEAU_COMPLEXITEIT[niveau.toLowerCase()] || niveau;
   const creboInfo = crebo ? ` (crebo ${crebo})` : '';
-
-  // Bij entree: zoek de bijpassende richting op basis van opleidingsnaam of sector,
-  // zodat de AI niet zelf hoeft te raden welke van de zeven richtingen van toepassing is.
-  const ENTREE_RICHTING_MAP = [
-    { sleutelwoorden: ['bouwen', 'wonen', 'onderhoud', 'schilder', 'timmerman', 'metselaar'], richting: 'Assistent bouwen, wonen en onderhoud' },
-    { sleutelwoorden: ['dienstverlening', 'schoonmaak', 'facilitair', 'zorg', 'verzorgend', 'helpende'], richting: 'Assistent dienstverlening' },
-    { sleutelwoorden: ['horeca', 'voeding', 'voedingsindustrie', 'kok', 'bediening', 'bakker', 'slager'], richting: 'Assistent horeca, voeding of voedingsindustrie' },
-    { sleutelwoorden: ['logistiek', 'magazijn', 'transport', 'bezorger', 'opslag'], richting: 'Assistent logistiek' },
-    { sleutelwoorden: ['metaal', 'elektro', 'installatie', 'lasser', 'monteur', 'elektricien'], richting: 'Assistent metaal-, elektro- en installatietechniek' },
-    { sleutelwoorden: ['mobiliteit', 'auto', 'voertuig', 'garage', 'band', 'automotive'], richting: 'Assistent mobiliteitsbranche' },
-    { sleutelwoorden: ['verkoop', 'retail', 'winkel', 'kassa', 'detailhandel', 'winkelbediende'], richting: 'Assistent verkoop/retail' },
-  ];
-
-  let entreeRichtingSectie = '';
-  if (niveau.toLowerCase() === 'entree') {
-    const zoekterm = (opleidingsnaam + ' ' + (sector || '')).toLowerCase();
-    const gevonden = ENTREE_RICHTING_MAP.find(r =>
-      r.sleutelwoorden.some(w => zoekterm.includes(w))
-    );
-    if (gevonden) {
-      entreeRichtingSectie = `\nENTREERICHTING: ${gevonden.richting}\nGebruik uitsluitend de context en voorbeelden die bij deze richting horen.\n`;
-    }
-  }
 
   let kerntakenSectie = '';
   if (kerntaken && Array.isArray(kerntaken) && kerntaken.length > 0) {
@@ -828,23 +773,11 @@ Dit is de modeloplossing die de docent kan gebruiken bij nakijken of uitleggen.`
 
 OFFICIELE KERNTAKEN UIT HET KWALIFICATIEDOSSIER (SBB):
 Dit zijn de werkelijke taken die een ${opleidingsnaam}-student uitvoert.
+Baseer de beroepscontext uitsluitend op deze taken.
 
 ${regels}
 
-CONCRETISERINGSSTAP — doe dit voor elke opgave die je bedenkt:
-Vertaal het werkproces eerst naar een concrete handeling op de werkvloer:
-  - Wat heeft de student fysiek in handen of voor zich?
-  - Welke actie voert hij/zij uit? (meten, invullen, controleren, afwegen, doorgeven…)
-  - Met welk instrument, formulier of systeem werkt hij/zij?
-Pas als je die handeling helder hebt, bedenk je welk rekenvraagstuk daarbij past.
-
-Dit voorkomt dat abstracte werkprocessen (zoals "bereidt voor" of "verzamelt informatie")
-worden ingevuld met taken die bij een aangrenzend beroep horen — een dispatcher,
-technicus of leidinggevende — in plaats van bij de ${opleidingsnaam} zelf.
-
-ZELFTEST PER OPGAVE: "Voert een ${opleidingsnaam}-student op de werkvloer deze concrete handeling uit,
-of is dit eigenlijk het werk van iemand anders in dezelfde omgeving?"
-Alleen als het antwoord voluit "ja" is, gebruik je deze situatie.`;
+BELANGRIJK: Gebruik alleen situaties die direct voortkomen uit deze kerntaken.`;
   }
 
   const gebruikersPrompt = `Maak 3 contextrijke rekenopgaven:
@@ -852,7 +785,7 @@ Alleen als het antwoord voluit "ja" is, gebruik je deze situatie.`;
 OPLEIDING: ${opleidingsnaam}${creboInfo}
 SECTOR: ${sector || 'niet opgegeven'}
 MBO-NIVEAU: ${niveau}
-${entreeRichtingSectie}${kerntakenSectie}
+${kerntakenSectie}
 FUNCTIONEEL REKENDOMEIN: ${domein}
 
 ${domeinInfo}
@@ -861,7 +794,7 @@ NIVEAUEISEN:
 ${niveauInfo}
 
 ZELFTESTS - controleer elke opgave:
-- Herkent een ${opleidingsnaam}-student deze werksituatie als iets wat híj/zíj zelf doet?${kerntaken ? `\n- Komt de concrete handeling (niet alleen het thema) uit een van de kerntaken hierboven?\n- Zou een aangrenzend beroep (technicus, dispatcher, leidinggevende) dit eerder doen dan de ${opleidingsnaam} zelf? Zo ja: verwerp en kies opnieuw.` : ''}
+- Herkent een ${opleidingsnaam}-student deze werksituatie?${kerntaken ? '\n- Komt de situatie uit een van de kerntaken hierboven?' : ''}
 - Bevat de opgave ALLEEN rekenhandelingen uit het domein "${domein}"?
 - Passen het aantal stappen en de getallen bij ${niveau}?
 - Is het antwoord realistisch en berekenbaar?
@@ -879,8 +812,8 @@ Geef de 3 opgaven als JSON-array.`;
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: ANTHROPIC_MODEL,
-        max_tokens: 2500,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 3000,
         system: systeemPrompt,
         messages: [{ role: 'user', content: gebruikersPrompt }]
       })
@@ -888,12 +821,9 @@ Geef de 3 opgaven als JSON-array.`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Anthropic API error:', response.status, errorText);
-      let gebruikersfout = 'AI-service tijdelijk niet beschikbaar';
-      if (response.status === 429) gebruikersfout = 'Te veel verzoeken — wacht even en probeer opnieuw.';
-      else if (response.status === 401) gebruikersfout = 'API-sleutel ongeldig of verlopen.';
+      console.error('Anthropic API error:', errorText);
       return new Response(
-        JSON.stringify({ error: gebruikersfout, statusCode: response.status }),
+        JSON.stringify({ error: 'AI-service tijdelijk niet beschikbaar' }),
         { status: 502, headers }
       );
     }
@@ -927,7 +857,7 @@ Geef de 3 opgaven als JSON-array.`;
 // ─── NT2-AANPASSING (tweede aanroep) ─────────────────────────────────────────
 
 async function handleNt2(body, apiKey, headers) {
-  const { contextbeschrijving, vraag, titel, opleidingsnaam, niveau, sector } = body;
+  const { contextbeschrijving, vraag, titel, opleidingsnaam, niveau } = body;
 
   if (!contextbeschrijving || !vraag) {
     return new Response(
@@ -997,7 +927,6 @@ OUTPUT FORMAAT — geef ALLEEN dit JSON-object, geen andere tekst:
 OPGAVE:
 Titel: ${titel || 'Opgave'}
 Opleiding: ${opleidingsnaam || 'mbo'}
-Sector: ${sector || 'niet opgegeven'}
 Mbo-niveau: ${niveau || ''}
 
 Contextbeschrijving:
@@ -1021,20 +950,16 @@ INSTRUCTIE:
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: ANTHROPIC_MODEL,
-        max_tokens: 2000,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1600,
         system: systeemPrompt,
         messages: [{ role: 'user', content: gebruikersPrompt }]
       })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('NT2 Anthropic API error:', response.status, errorText);
-      let gebruikersfout = 'NT2-aanpassing tijdelijk niet beschikbaar';
-      if (response.status === 429) gebruikersfout = 'Te veel verzoeken — wacht even en probeer opnieuw.';
       return new Response(
-        JSON.stringify({ error: gebruikersfout, statusCode: response.status }),
+        JSON.stringify({ error: 'NT2-aanpassing tijdelijk niet beschikbaar' }),
         { status: 502, headers }
       );
     }
