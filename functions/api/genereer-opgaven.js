@@ -256,9 +256,14 @@ Voorbeeld niveau 3 (beauty/wellness): Een haarkleuringsproduct wordt gemengd in 
 1 deel kleur op 1,5 deel oxidant. De stylist heeft 45 ml kleur. Hoeveel ml oxidant heeft ze nodig?
 
 NIVEAUGRENS NIVEAU 4: student benoemt en gebruikt de vaste factor expliciet;
-samengestelde grootheden omzetten; terugrekenen vanuit uitkomst naar beginwaarde;
-complexere situaties waarbij meerdere verhoudingen tegelijk spelen.
-Voorbeeld niveau 4 (techniek): Een auto rijdt 400 meter in 31 seconden. Bereken de snelheid in km/u.
+samengestelde grootheden omzetten waarbij de verhouding de kern is (niet de eenheidsomrekening);
+terugrekenen vanuit uitkomst naar beginwaarde; complexere situaties waarbij meerdere verhoudingen
+tegelijk spelen.
+LET OP DOMEINGRENS: als het omzetten van eenheden (m→km, seconden→uren) de kernhandeling is,
+hoort de opgave in Grootheden en eenheden. In dit domein is de verhoudingsredenering de kern.
+Voorbeeld niveau 4 (techniek): Een lasser verwerkt gemiddeld 1,8 meter lasnaad per uur. Een opdracht
+vereist 12,6 meter lasnaad verdeeld over twee lassers. Lasser A werkt op 110% van het gemiddelde tempo,
+lasser B op 85%. Hoeveel uur heeft elk van hen nodig?
 Voorbeeld niveau 4 (horeca): Voor een gala worden 140 glazen cocktail gemaakt. Het recept voor 6 glazen
 vraagt 225 g honing. De kok heeft nog 1,2 kg honing. Is dat genoeg? Hoeveel gram ontbreekt er eventueel?
 Voorbeeld niveau 4 (bouw): Beton wordt gemengd in de verhouding 1 deel cement : 2 delen zand : 3 delen grind.
@@ -316,8 +321,9 @@ Voorbeeld entree (Assistent mobiliteitsbranche): Een garage heeft 10 afspraken o
 50% zijn al afgerond. Hoeveel afspraken zijn er nog?
 Voorbeeld entree (Assistent bouwen/wonen/onderhoud): Je moet 10 m2 schilderen.
 Je hebt 50% al gedaan. Hoeveel m2 moet je nog schilderen?
-TE MOEILIJK VOOR ENTREE: een percentage dat niet 10%, 25% of 50% is, of waarbij de student
-zelf moet bepalen wat 100% is. Dat is niveau 2.
+TE MOEILIJK VOOR ENTREE: elk percentage dat niet exact 10% of 50% is, of waarbij de student
+zelf moet bepalen wat 100% is, of waarbij een berekening in twee stappen nodig is. Dat is niveau 2.
+Toelichting: 25% (een kwart) vraagt abstractie die entreestudenten nog niet beheersen — dat hoort bij niveau 2.
 
 NIVEAUGRENS NIVEAU 2: één procentberekening, mooie percentages (10%, 25%, 50%),
 de aanpak ligt voor de hand.
@@ -530,8 +536,12 @@ Voorbeeld niveau 3 (economie/admin): Hieronder staat het urenregistratieoverzich
 Hoeveel uur heeft Kim deze week gewerkt? Hoeveel uur meer of minder dan Daan?
 
 NIVEAUGRENS NIVEAU 4: meerdere bronnen combineren; informatie kritisch beoordelen op
-volledigheid of logica; vergelijken leidt tot een onderbouwde conclusie in absolute getallen
+volledigheid, logica én betrouwbaarheid (klopt de bron? ontbreken er gegevens? is de weergave
+misleidend?); vergelijken leidt tot een onderbouwde conclusie in absolute getallen
 (NIET als procentberekening — dat is het domein Procenten).
+Op niveau 4 kan de student ook gevraagd worden zelf een vraag te formuleren op basis van de data:
+"Welke vraag zou je stellen als je de oorzaak van dit patroon wil onderzoeken?"
+Dit onderscheidt niveau 4 van niveau 3, waarbij altijd een vaste vraag wordt gesteld.
 Voorbeeld niveau 4 (zorg/management): Hieronder staan twee tabellen.
 Tabel 1 — Bezettingsnorm per afdeling:
 | Afdeling    | Minimale bezetting | Maximale bezetting |
@@ -627,7 +637,11 @@ combineren, of een beslissing moet nemen op basis van een berekening, is het niv
 
   'niveau 2': `
 SITUATIE: Herkenbaar en direct. Context is eenduidig. Geen verrassingen.
-GETALLEN: Voornamelijk hele getallen. Decimalen alleen als ze gangbaar zijn (bijv. 12,50 euro of 1,5 liter).
+GETALLEN: Voornamelijk hele getallen. Decimalen alleen als ze onvermijdelijk gangbaar zijn in de
+beroepspraktijk én de berekening er niet complexer door wordt: 1,5 liter, 0,5 uur, 2,5 kg zijn
+toegestaan. Geldbedragen met centen (bijv. 12,50 euro) zijn alleen toegestaan als de rekenhandeling
+zelf eenvoudig blijft (direct aflezen of één vermenigvuldiging). Vermijd decimalen die leiden tot
+meerdere afrondingen of tussenuitkomsten.
 STAPPEN: Maximaal twee rekenhandelingen. Elke stap is duidelijk.
 STRUCTUUR: De aanpak is voor de hand liggend. Student hoeft niet te kiezen tussen aanpakken.
 GRENS NAAR NIVEAU 3: zodra de student zelf moet bepalen welke aanpak passend is, welke informatie
@@ -644,7 +658,25 @@ BELANGRIJK: Combineer NOOIT twee verschillende rekendomeinen in een opgave op di
 SITUATIE: Kan minder vertrouwd zijn. Bevat afleidende informatie die de student zelf moet filteren.
 GETALLEN: Complexere getallen en bewerkingen. Decimalen, onregelmatige percentages.
 STAPPEN: Drie of meer rekenhandelingen. Student structureert het rekenproces volledig zelf.
-STRUCTUUR: Student bepaalt zelf de aanpak. Terugrekenen of meerstapsredenering verwacht.`
+STRUCTUUR: Student bepaalt zelf de aanpak. Terugrekenen of meerstapsredenering verwacht.
+
+FORMULEGRENS (niveau 4 — Rekeneisen mbo 2020):
+Formules zijn toegestaan als ze bestaan uit gangbare woordvariabelen die iedereen begrijpt
+zonder vakdiploma. Voorbeelden die WEL mogen:
+- snelheid = afstand ÷ tijd
+- verbruik = liters ÷ kilometers × 100
+- beschermingsfactor × onbeschermde tijd = maximale tijd in de zon
+- dosering = gewicht (kg) × mg per kg
+
+VERBOD VAKFORMULES: Gebruik NOOIT formules met abstracte lettervariabelen uit een vakdiscipline
+(elektrotechniek, scheikunde, mechanica, bouwkunde, enz.), zoals:
+- I = P / (U × cos φ)  →  VERBODEN (elektrotechniek)
+- F = m × a           →  VERBODEN (mechanica/natuurkunde)
+- c = n / V           →  VERBODEN (scheikunde)
+- Q = U × I × t       →  VERBODEN (elektrotechniek)
+
+De vuistregel: kan een mbo-student van een compleet andere opleiding (bijv. zorg of horeca)
+de rekenstructuur begrijpen? Zo nee — het is geen functioneel rekenen maar vaktheorie.`
 };
 
 // ─── CORS-HEADERS ────────────────────────────────────────────────────────────
@@ -713,7 +745,11 @@ STRIKTE REGELS:
 2. DOMEINZUIVERHEID: Elke opgave gebruikt precies een functioneel rekendomein. Combineer nooit twee domeinen.
 3. NIVEAUBEWAKING: Pas de complexiteit strikt aan op het opgegeven niveau.
 4. BEREKENBAAR: Elk antwoord moet met de hand uitrekenbaar zijn door een mbo-student.
-5. DRIE VERSCHILLENDE SITUATIES: De opgaven mogen niet op elkaar lijken.
+5. GEEN VAKFORMULES: Gebruik uitsluitend woordformules met gangbare, voor iedereen begrijpelijke
+   grootheden (Rekeneisen mbo 2020). Formules met abstracte lettervariabelen uit een vakdiscipline
+   (elektrotechniek, scheikunde, mechanica, e.d.) zijn verboden op alle niveaus. De rekenhandeling
+   moet begrijpelijk zijn zonder vakkennis van de opleiding.
+6. DRIE VERSCHILLENDE SITUATIES: De opgaven mogen niet op elkaar lijken.
 
 OUTPUT FORMAAT - geef ALLEEN een JSON-array, geen andere tekst:
 [
